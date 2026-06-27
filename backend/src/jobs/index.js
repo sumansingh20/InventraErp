@@ -4,10 +4,17 @@ const Bull = require('bull');
 const logger = require('../config/logger');
 const notificationService = require('../services/notification.service');
 
+const { getRedisClient } = require('../config/redis');
+
 // Queue instances
 const queues = {};
 
 const initBullQueues = () => {
+  if (!getRedisClient()) {
+    logger.warn('⚠️ Redis is offline. Skipping Bull queues initialization. Background jobs will be disabled.');
+    return;
+  }
+
   const redisConfig = {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,

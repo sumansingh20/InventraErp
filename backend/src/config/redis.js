@@ -40,6 +40,7 @@ const connectRedis = async () => {
     logger.error('Redis connection failed:', error);
     // Don't throw - Redis is optional, app can work without it
     logger.warn('Continuing without Redis cache...');
+    client = null;
     return null;
   }
 };
