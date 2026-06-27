@@ -10,7 +10,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 const connectDB = require('./config/database');
 const connectRedis = require('./config/redis');
