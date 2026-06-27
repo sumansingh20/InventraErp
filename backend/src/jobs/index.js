@@ -11,7 +11,7 @@ const queues = {};
 
 const initBullQueues = () => {
   if (!getRedisClient()) {
-    logger.warn('⚠️ Redis is offline. Skipping Bull queues initialization. Background jobs will be disabled.');
+    logger.info('Background jobs (Bull queues) are disabled (offline mode)');
     return;
   }
 

@@ -1,9 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════════════
-   INVENTRA ENTERPRISE ERP — DESIGN TOKENS
-   Single source of truth for all design decisions.
-   Version: 3.0.0 | Dark-first premium enterprise design system
-   ═══════════════════════════════════════════════════════════════════════════ */
-
 :root {
   /* ── Brand Identity ───────────────────────────────────────────────────── */
   --brand-hue: 243;

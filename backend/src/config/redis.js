@@ -36,10 +36,10 @@ const connectRedis = async () => {
     return client;
   } catch (error) {
     if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
-      logger.warn('Redis is offline. Continuing without Redis cache...');
+      logger.info('Redis cache is disabled (offline mode)');
     } else {
       logger.error('Redis connection failed:', error.message);
-      logger.warn('Continuing without Redis cache...');
+      logger.info('Redis cache is disabled (offline mode)');
     }
     client = null;
     return null;
