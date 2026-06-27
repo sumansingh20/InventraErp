@@ -249,3 +249,4 @@ if (!process.env.VERCEL) {
 
 // Vercel serverless requires exporting the app
 module.exports = app;
+

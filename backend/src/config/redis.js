@@ -11,19 +11,17 @@ const connectRedis = async () => {
       socket: {
         host: process.env.REDIS_HOST || 'localhost',
         port: parseInt(process.env.REDIS_PORT) || 6379,
-        reconnectStrategy: (retries) => {
-          if (retries > 3) {
-            return new Error('Redis connection failed permanently');
-          }
-          return Math.min(retries * 50, 2000);
-        }
+        reconnectStrategy: false // Do not retry to connect if Redis is offline
       },
       password: process.env.REDIS_PASSWORD || undefined,
       url: process.env.REDIS_URL
     });
 
     client.on('error', (err) => {
-      logger.error('Redis Client Error:', err);
+      // Avoid spamming the console with connection refused errors during startup
+      if (err.code !== 'ECONNREFUSED') {
+        logger.error('Redis Client Error:', err);
+      }
     });
 
     client.on('connect', () => {
@@ -31,15 +29,18 @@ const connectRedis = async () => {
     });
 
     client.on('reconnecting', () => {
-      logger.warn('Redis client reconnecting...');
+      // Do nothing to avoid console spam
     });
 
     await client.connect();
     return client;
   } catch (error) {
-    logger.error('Redis connection failed:', error);
-    // Don't throw - Redis is optional, app can work without it
-    logger.warn('Continuing without Redis cache...');
+    if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
+      logger.warn('Redis is offline. Continuing without Redis cache...');
+    } else {
+      logger.error('Redis connection failed:', error.message);
+      logger.warn('Continuing without Redis cache...');
+    }
     client = null;
     return null;
   }
