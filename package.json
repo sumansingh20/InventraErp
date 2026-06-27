@@ -1,0 +1,19 @@
+{
+  "name": "inventra-enterprise-erp",
+  "version": "1.0.0",
+  "description": "Inventra Enterprise ERP - Complete Cloud-Based Business Management Platform",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install",
+    "dev": "cd backend && npm run dev",
+    "start": "cd backend && npm start",
+    "build": "echo 'No build step required for backend'",
+    "test": "cd backend && npm test",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "keywords": ["erp", "inventory", "accounting", "pos", "crm", "hrms"],
+  "author": "Inventra Systems",
+  "license": "UNLICENSED"
+}

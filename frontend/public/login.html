@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sign in to Inventra Enterprise ERP — The complete cloud-based business management platform for inventory, POS, accounting, CRM, HRMS and more.">
+  <meta name="theme-color" content="#0b0e1a">
+  <title>Sign In — Inventra Enterprise ERP</title>
+
+  <!-- Preconnect -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Design System -->
+  <link rel="stylesheet" href="/css/design-tokens.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/main.css">
+
+  <style>
+    /* Auth page layout overrides */
+    body {
+      background: hsl(222, 47%, 5%);
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .auth-container {
+      display: grid;
+      grid-template-columns: 1fr 500px;
+      min-height: 100vh;
+      width: 100%;
+    }
+
+    /* ── Brand Panel ── */
+    .auth-brand {
+      background: linear-gradient(145deg, hsl(222, 47%, 5%) 0%, hsl(243, 40%, 9%) 50%, hsl(262, 38%, 8%) 100%);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 48px 64px;
+      overflow: hidden;
+    }
+
+    .auth-grid-pattern {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
+      background-size: 56px 56px;
+    }
+
+    .auth-glow-a {
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, hsla(243, 75%, 59%, 0.18) 0%, transparent 65%);
+      top: -200px; left: -150px;
+      pointer-events: none;
+    }
+
+    .auth-glow-b {
+      position: absolute;
+      width: 450px; height: 450px;
+      border-radius: 50%;
+      background: radial-gradient(circle, hsla(262, 83%, 58%, 0.15) 0%, transparent 65%);
+      bottom: -100px; right: -100px;
+      pointer-events: none;
+    }
+
+    .auth-brand-top {
+      position: relative;
+      z-index: 1;
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 64px;
+    }
+
+    .auth-logo-mark {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, hsl(243, 75%, 59%), hsl(262, 83%, 58%));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: white;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+      flex-shrink: 0;
+    }
+
+    .auth-logo-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: -0.03em;
+    }
+
+    .auth-headline {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.12;
+      letter-spacing: -0.04em;
+      margin-bottom: 20px;
+    }
+
+    .auth-headline .gradient-text {
+      background: linear-gradient(135deg, hsl(243, 90%, 72%), hsl(262, 90%, 72%));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .auth-desc {
+      font-size: 16px;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.65;
+      max-width: 440px;
+    }
+
+    /* Feature list */
+    .auth-features {
+      margin-top: 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .auth-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      animation: fadeInLeft 0.6s ease both;
+    }
+
+    .auth-feature:nth-child(2) { animation-delay: 100ms; }
+    .auth-feature:nth-child(3) { animation-delay: 200ms; }
+
+    .auth-feature-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .auth-feature-icon.indigo { background: hsla(243, 75%, 59%, 0.2); color: hsl(243, 80%, 72%); }
+    .auth-feature-icon.violet { background: hsla(262, 83%, 58%, 0.2); color: hsl(262, 85%, 72%); }
+    .auth-feature-icon.emerald { background: hsla(160, 75%, 40%, 0.2); color: hsl(160, 80%, 60%); }
+
+    .auth-feature-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 3px;
+    }
+
+    .auth-feature-desc {
+      font-size: 12px;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.5;
+    }
+
+    /* Metric pills */
+    .auth-metrics {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .auth-metric-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .metric-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.03em;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.4);
+      line-height: 1.3;
+    }
+
+    .metric-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .metric-dot.green  { background: hsl(160, 80%, 50%); box-shadow: 0 0 6px hsl(160, 80%, 50%); }
+    .metric-dot.indigo { background: hsl(243, 80%, 65%); box-shadow: 0 0 6px hsl(243, 80%, 65%); }
+    .metric-dot.amber  { background: hsl(38, 92%, 55%); box-shadow: 0 0 6px hsl(38, 92%, 55%); }
+
+    /* ── Form Panel ── */
+    .auth-form-side {
+      background: hsl(222, 39%, 8%);
+      border-left: 1px solid hsl(222, 25%, 14%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 40px;
+      overflow-y: auto;
+    }
+
+    .auth-form-container {
+      width: 100%;
+      max-width: 380px;
+      animation: fadeInUp 0.5s ease both;
+    }
+
+    .auth-form-header {
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .auth-form-icon {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, hsl(243, 75%, 59%), hsl(262, 83%, 58%));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      color: white;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+    }
+
+    .auth-form-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: rgba(255,255,255,0.92);
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
+    }
+
+    .auth-form-subtitle {
+      font-size: 14px;
+      color: rgba(255,255,255,0.45);
+    }
+
+    /* Custom form inputs for dark auth */
+    .auth-field {
+      margin-bottom: 16px;
+    }
+
+    .auth-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .auth-input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .auth-input-icon {
+      position: absolute;
+      left: 14px;
+      color: rgba(255,255,255,0.3);
+      font-size: 15px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .auth-input {
+      width: 100%;
+      height: 46px;
+      padding: 0 44px 0 42px;
+      background: rgba(255,255,255,0.05);
+      border: 1.5px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      color: rgba(255,255,255,0.9);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .auth-input::placeholder { color: rgba(255,255,255,0.2); }
+
+    .auth-input:hover {
+      border-color: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.07);
+    }
+
+    .auth-input:focus {
+      border-color: hsl(243, 75%, 59%);
+      background: rgba(99, 102, 241, 0.08);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .auth-input.is-error {
+      border-color: hsl(350, 89%, 60%);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+    }
+
+    .auth-eye-btn {
+      position: absolute;
+      right: 12px;
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.3);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-eye-btn:hover { color: rgba(255,255,255,0.6); }
+
+    /* Submit button */
+    .auth-btn {
+      width: 100%;
+      height: 48px;
+      background: linear-gradient(135deg, hsl(243, 75%, 59%), hsl(262, 83%, 58%));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      letter-spacing: 0.01em;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .auth-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.12), transparent);
+      border-radius: inherit;
+    }
+
+    .auth-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(99, 102, 241, 0.45);
+    }
+
+    .auth-btn:active { transform: translateY(0); box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3); }
+
+    .auth-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .auth-btn .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-right-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    /* Links */
+    .auth-link {
+      color: hsl(243, 80%, 72%);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.15s;
+    }
+    .auth-link:hover { color: hsl(243, 80%, 80%); }
+
+    /* Alert */
+    .auth-alert {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .auth-alert.show { display: flex; animation: fadeInDown 0.3s ease; }
+    .auth-alert.error { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); color: hsl(350, 85%, 72%); }
+    .auth-alert.success { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: hsl(160, 75%, 60%); }
+
+    /* Divider */
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .auth-divider-line {
+      flex: 1;
+      height: 1px;
+      background: rgba(255,255,255,0.06);
+    }
+
+    .auth-divider-text {
+      font-size: 12px;
+      color: rgba(255,255,255,0.25);
+    }
+
+    /* Remember / forgot row */
+    .auth-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .auth-remember {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .auth-checkbox {
+      width: 16px; height: 16px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 4px;
+      background: transparent;
+      cursor: pointer;
+      appearance: none;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .auth-checkbox:checked {
+      background: hsl(243, 75%, 59%);
+      border-color: hsl(243, 75%, 59%);
+      background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+    }
+
+    .auth-remember-label {
+      font-size: 13px;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* Bottom text */
+    .auth-bottom {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* Trust badges */
+    .auth-trust {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 32px;
+    }
+
+    .auth-trust-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: rgba(255,255,255,0.22);
+    }
+
+    .auth-trust-item i { font-size: 13px; }
+
+    /* Mobile: show logo */
+    .auth-mobile-logo {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 900px) {
+      .auth-container { grid-template-columns: 1fr; }
+      .auth-brand { display: none; }
+      .auth-form-side { padding: 40px 24px; }
+      .auth-mobile-logo { display: flex; }
+      body { background: hsl(222, 39%, 8%); }
+    }
+
+    /* Strength meter */
+    .password-strength {
+      height: 2px;
+      border-radius: 999px;
+      margin-top: 6px;
+      background: rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+
+    .password-strength-fill {
+      height: 100%;
+      border-radius: 999px;
+      width: 0;
+      transition: width 0.3s ease, background 0.3s ease;
+    }
+
+    .strength-0 { width: 0%; }
+    .strength-1 { width: 25%; background: hsl(350, 85%, 60%); }
+    .strength-2 { width: 50%; background: hsl(38, 92%, 55%); }
+    .strength-3 { width: 75%; background: hsl(38, 92%, 55%); }
+    .strength-4 { width: 100%; background: hsl(160, 75%, 48%); }
+  </style>
+</head>
+<body>
+
+<div class="auth-container">
+  <!-- ── Brand Panel ────────────────────────────────────── -->
+  <div class="auth-brand">
+    <div class="auth-grid-pattern"></div>
+    <div class="auth-glow-a"></div>
+    <div class="auth-glow-b"></div>
+
+    <!-- Top: Logo + Headline -->
+    <div class="auth-brand-top">
+      <div class="auth-logo">
+        <div class="auth-logo-mark"><i class="bi bi-boxes"></i></div>
+        <span class="auth-logo-name">Inventra</span>
+      </div>
+
+      <h1 class="auth-headline">
+        Run your entire<br>
+        business on <span class="gradient-text">one platform</span>
+      </h1>
+
+      <p class="auth-desc">
+        Inventory, POS, Sales, Purchases, Accounting, CRM, HRMS, Manufacturing, Warehousing — all seamlessly connected in real time.
+      </p>
+
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon indigo">
+            <i class="bi bi-cpu-fill"></i>
+          </div>
+          <div>
+            <div class="auth-feature-title">AI-Powered Intelligence</div>
+            <div class="auth-feature-desc">Camera scanning, auto-lookup, predictive restocking, and digital twins</div>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon violet">
+            <i class="bi bi-lightning-charge-fill"></i>
+          </div>
+          <div>
+            <div class="auth-feature-title">Real-Time Core Engine</div>
+            <div class="auth-feature-desc">WebSocket-powered stock updates, live ledgers, and instant alerts</div>
+          </div>
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon emerald">
+            <i class="bi bi-shield-check-fill"></i>
+          </div>
+          <div>
+            <div class="auth-feature-title">Enterprise-Grade Security</div>
+            <div class="auth-feature-desc">JWT + MFA + RBAC/ABAC access controls with full audit trail</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom: Live metrics -->
+    <div class="auth-metrics">
+      <div class="auth-metric-pill">
+        <div class="metric-dot green"></div>
+        <div>
+          <div class="metric-value">99.9%</div>
+          <div class="metric-label">Uptime SLA</div>
+        </div>
+      </div>
+      <div class="auth-metric-pill">
+        <div class="metric-dot indigo"></div>
+        <div>
+          <div class="metric-value">10M+</div>
+          <div class="metric-label">Transactions</div>
+        </div>
+      </div>
+      <div class="auth-metric-pill">
+        <div class="metric-dot amber"></div>
+        <div>
+          <div class="metric-value">&lt;80ms</div>
+          <div class="metric-label">API Latency</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Form Panel ─────────────────────────────────────── -->
+  <div class="auth-form-side">
+    <div class="auth-form-container">
+
+      <!-- Mobile logo -->
+      <div class="auth-mobile-logo">
+        <div class="auth-logo-mark"><i class="bi bi-boxes"></i></div>
+        <span class="auth-logo-name" style="color:rgba(255,255,255,0.9);">Inventra</span>
+      </div>
+
+      <!-- Alert -->
+      <div class="auth-alert" id="authAlert" role="alert">
+        <i class="bi bi-exclamation-circle-fill"></i>
+        <span id="authAlertMsg"></span>
+      </div>
+
+      <!-- ── Login Form ── -->
+      <div id="loginSection">
+        <div class="auth-form-header">
+          <div class="auth-form-icon"><i class="bi bi-boxes"></i></div>
+          <div class="auth-form-title">Welcome back</div>
+          <div class="auth-form-subtitle">Sign in to your Inventra workspace</div>
+        </div>
+
+        <form id="loginForm" novalidate>
+          <div class="auth-field">
+            <label class="auth-label" for="loginEmail">Email Address</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-envelope auth-input-icon"></i>
+              <input type="email" id="loginEmail" class="auth-input" placeholder="you@company.com" autocomplete="email" required>
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <label class="auth-label" for="loginPassword" style="margin-bottom:0;">Password</label>
+              <a href="#" class="auth-link" style="font-size:12px;" id="toForgotBtn">Forgot password?</a>
+            </div>
+            <div class="auth-input-wrap">
+              <i class="bi bi-lock auth-input-icon"></i>
+              <input type="password" id="loginPassword" class="auth-input" placeholder="••••••••" autocomplete="current-password" required>
+              <button type="button" class="auth-eye-btn" onclick="togglePass('loginPassword', this)">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-row">
+            <label class="auth-remember">
+              <input type="checkbox" class="auth-checkbox" id="rememberMe">
+              <span class="auth-remember-label">Remember me</span>
+            </label>
+          </div>
+
+          <button type="submit" class="auth-btn" id="loginBtn">
+            <span class="spinner d-none" id="loginSpinner"></span>
+            <span id="loginBtnText">Sign In</span>
+            <i class="bi bi-arrow-right" id="loginBtnIcon"></i>
+          </button>
+
+          <div class="auth-bottom">
+            New organization? <a href="#" class="auth-link" id="toRegisterBtn">Create account</a>
+          </div>
+        </form>
+
+        <div class="auth-trust">
+          <span class="auth-trust-item"><i class="bi bi-lock-fill"></i> SOC 2 Type II</span>
+          <span class="auth-trust-item"><i class="bi bi-shield-check"></i> ISO 27001</span>
+          <span class="auth-trust-item"><i class="bi bi-award"></i> GDPR Compliant</span>
+        </div>
+      </div>
+
+      <!-- ── Register Form ── -->
+      <div id="registerSection" style="display:none;">
+        <div class="auth-form-header">
+          <div class="auth-form-icon" style="background:linear-gradient(135deg,hsl(160,75%,38%),hsl(175,77%,35%));">
+            <i class="bi bi-building-add"></i>
+          </div>
+          <div class="auth-form-title">Create workspace</div>
+          <div class="auth-form-subtitle">Launch your Inventra ERP in minutes</div>
+        </div>
+
+        <form id="registerForm" novalidate>
+          <div class="auth-field">
+            <label class="auth-label" for="regName">Full Name</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-person auth-input-icon"></i>
+              <input type="text" id="regName" class="auth-input" placeholder="Your full name" required>
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-label" for="regEmail">Work Email</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-envelope auth-input-icon"></i>
+              <input type="email" id="regEmail" class="auth-input" placeholder="you@company.com" required>
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-label" for="regCompany">Company Name</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-building auth-input-icon"></i>
+              <input type="text" id="regCompany" class="auth-input" placeholder="Acme Corporation" required>
+            </div>
+          </div>
+
+          <div class="auth-field">
+            <label class="auth-label" for="regPassword">Password</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-lock auth-input-icon"></i>
+              <input type="password" id="regPassword" class="auth-input" placeholder="Min 8 chars, uppercase + digit" required id="regPassword" oninput="checkStrength(this.value)">
+              <button type="button" class="auth-eye-btn" onclick="togglePass('regPassword', this)">
+                <i class="bi bi-eye"></i>
+              </button>
+            </div>
+            <div class="password-strength">
+              <div class="password-strength-fill" id="strengthFill"></div>
+            </div>
+          </div>
+
+          <button type="submit" class="auth-btn" id="registerBtn" style="background:linear-gradient(135deg,hsl(160,75%,38%),hsl(175,77%,35%));box-shadow:0 4px 16px rgba(16,185,129,0.35);">
+            <span class="spinner d-none" id="regSpinner"></span>
+            <span id="registerBtnText">Create Account</span>
+            <i class="bi bi-arrow-right"></i>
+          </button>
+
+          <div class="auth-bottom">
+            Already have an account? <a href="#" class="auth-link" id="toLoginFromRegBtn">Sign in</a>
+          </div>
+        </form>
+      </div>
+
+      <!-- ── Forgot Password Form ── -->
+      <div id="forgotSection" style="display:none;">
+        <div class="auth-form-header">
+          <div class="auth-form-icon" style="background:linear-gradient(135deg,hsl(38,92%,50%),hsl(32,95%,44%));box-shadow:0 8px 24px rgba(245,158,11,0.4);">
+            <i class="bi bi-key-fill"></i>
+          </div>
+          <div class="auth-form-title">Recover access</div>
+          <div class="auth-form-subtitle">Enter your email to receive a secure reset link</div>
+        </div>
+
+        <form id="forgotForm" novalidate>
+          <div class="auth-field">
+            <label class="auth-label" for="forgotEmail">Email Address</label>
+            <div class="auth-input-wrap">
+              <i class="bi bi-envelope auth-input-icon"></i>
+              <input type="email" id="forgotEmail" class="auth-input" placeholder="you@company.com" required>
+            </div>
+          </div>
+
+          <button type="submit" class="auth-btn" id="forgotBtn" style="background:linear-gradient(135deg,hsl(38,92%,50%),hsl(32,95%,44%));box-shadow:0 4px 16px rgba(245,158,11,0.35);">
+            <span class="spinner d-none" id="forgotSpinner"></span>
+            <span>Send Reset Link</span>
+            <i class="bi bi-send-fill"></i>
+          </button>
+
+          <div class="auth-bottom" style="margin-top:16px;">
+            <a href="#" class="auth-link" id="toLoginFromForgotBtn">← Back to Sign In</a>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script>
+  /* ── Auth page logic ── */
+  const sections = {
+    login:    document.getElementById('loginSection'),
+    register: document.getElementById('registerSection'),
+    forgot:   document.getElementById('forgotSection'),
+  };
+
+  function showSection(name) {
+    Object.values(sections).forEach(s => s.style.display = 'none');
+    sections[name].style.display = 'block';
+    sections[name].style.animation = 'fadeInUp 0.35s ease both';
+    hideAlert();
+  }
+
+  function showAlert(msg, type = 'error') {
+    const el = document.getElementById('authAlert');
+    const msgEl = document.getElementById('authAlertMsg');
+    el.className = 'auth-alert show ' + type;
+    el.querySelector('i').className = type === 'error' ? 'bi bi-exclamation-circle-fill' : 'bi bi-check-circle-fill';
+    msgEl.textContent = msg;
+  }
+
+  function hideAlert() {
+    document.getElementById('authAlert').className = 'auth-alert';
+  }
+
+  function setLoading(btnId, spinnerId, iconId, loading) {
+    const btn = document.getElementById(btnId);
+    const spinner = document.getElementById(spinnerId);
+    if (iconId) {
+      const icon = document.getElementById(iconId);
+      if (icon) icon.style.display = loading ? 'none' : '';
+    }
+    if (spinner) spinner.classList.toggle('d-none', !loading);
+    btn.disabled = loading;
+  }
+
+  function togglePass(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.className = 'bi bi-eye-slash';
+    } else {
+      input.type = 'password';
+      icon.className = 'bi bi-eye';
+    }
+  }
+
+  function checkStrength(val) {
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const fill = document.getElementById('strengthFill');
+    fill.className = 'password-strength-fill strength-' + score;
+  }
+
+  function shakeForm(formId) {
+    const form = document.getElementById(formId);
+    form.classList.add('anim-shake');
+    setTimeout(() => form.classList.remove('anim-shake'), 500);
+  }
+
+  /* Navigation */
+  document.getElementById('toRegisterBtn').addEventListener('click', e => { e.preventDefault(); showSection('register'); });
+  document.getElementById('toLoginFromRegBtn').addEventListener('click', e => { e.preventDefault(); showSection('login'); });
+  document.getElementById('toForgotBtn').addEventListener('click', e => { e.preventDefault(); showSection('forgot'); });
+  document.getElementById('toLoginFromForgotBtn').addEventListener('click', e => { e.preventDefault(); showSection('login'); });
+
+  /* Login */
+  document.getElementById('loginForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    hideAlert();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!email || !password) { shakeForm('loginForm'); showAlert('Please fill in all fields.'); return; }
+    setLoading('loginBtn', 'loginSpinner', 'loginBtnIcon', true);
+    try {
+      const res = await window.api.post('/auth/login', { email, password });
+      if (res.success) {
+        window.auth.setSession(res.data.token, res.data.user);
+        showAlert('Login successful! Redirecting...', 'success');
+        document.getElementById('loginBtnText').textContent = 'Redirecting...';
+        setTimeout(() => { window.location.href = '/'; }, 1000);
+      } else {
+        shakeForm('loginForm');
+        showAlert(res.message || 'Invalid credentials. Please try again.');
+      }
+    } catch (err) {
+      shakeForm('loginForm');
+      showAlert(err.message || 'Connection error. Please check your network.');
+    } finally {
+      setLoading('loginBtn', 'loginSpinner', 'loginBtnIcon', false);
+    }
+  });
+
+  /* Register */
+  document.getElementById('registerForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    hideAlert();
+    const name = document.getElementById('regName').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const companyName = document.getElementById('regCompany').value.trim();
+    const password = document.getElementById('regPassword').value;
+    if (!name || !email || !companyName || !password) { shakeForm('registerForm'); showAlert('Please fill in all fields.'); return; }
+    setLoading('registerBtn', 'regSpinner', null, true);
+    try {
+      const res = await window.api.post('/auth/register', { name, email, companyName, password });
+      if (res.success) {
+        showAlert('Account created! Signing you in...', 'success');
+        setTimeout(() => {
+          showSection('login');
+          document.getElementById('loginEmail').value = email;
+        }, 1500);
+      } else {
+        shakeForm('registerForm');
+        showAlert(res.message || 'Registration failed. Please try again.');
+      }
+    } catch (err) {
+      shakeForm('registerForm');
+      showAlert(err.message || 'Registration error. Please try again.');
+    } finally {
+      setLoading('registerBtn', 'regSpinner', null, false);
+    }
+  });
+
+  /* Forgot */
+  document.getElementById('forgotForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    hideAlert();
+    const email = document.getElementById('forgotEmail').value.trim();
+    if (!email) { shakeForm('forgotForm'); showAlert('Please enter your email address.'); return; }
+    setLoading('forgotBtn', 'forgotSpinner', null, true);
+    try {
+      const res = await window.api.post('/auth/forgot-password', { email });
+      if (res.success) {
+        showAlert('Recovery email sent. Check your inbox.', 'success');
+      } else {
+        shakeForm('forgotForm');
+        showAlert(res.message || 'Could not send recovery email. Please try again.');
+      }
+    } catch (err) {
+      shakeForm('forgotForm');
+      showAlert(err.message || 'Error sending recovery email.');
+    } finally {
+      setLoading('forgotBtn', 'forgotSpinner', null, false);
+    }
+  });
+</script>
+</body>
+</html>

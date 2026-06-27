@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warehouse Digital Twin — InventraERP</title>
+  <meta name="description" content="Interactive 3D Warehouse Digital Twin — visualize every zone, rack, shelf and bin with live inventory data.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --bg: #04091a;
+      --bg-card: #08122a;
+      --bg-panel: #0c1a38;
+      --border: rgba(59,130,246,0.18);
+      --blue: #3b82f6;
+      --cyan: #06b6d4;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --purple: #8b5cf6;
+      --orange: #f97316;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --sub: #94a3b8;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+    /* Header */
+    .wt-header {
+      background:linear-gradient(135deg,#04091a,#08122a);
+      border-bottom:1px solid var(--border);
+      padding:14px 28px;
+      display:flex; align-items:center; justify-content:space-between;
+      position:sticky; top:0; z-index:100; backdrop-filter:blur(20px);
+    }
+    .wt-brand { display:flex; align-items:center; gap:12px; }
+    .wt-brand-icon {
+      width:38px; height:38px;
+      background:linear-gradient(135deg,var(--blue),var(--cyan));
+      border-radius:10px; display:flex; align-items:center; justify-content:center;
+      font-size:20px; box-shadow:0 0 20px rgba(59,130,246,0.35);
+    }
+    .wt-title { font-size:17px; font-weight:700; }
+    .wt-sub { font-size:11px; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; }
+
+    /* Layout */
+    .wt-layout { display:grid; grid-template-columns:280px 1fr 300px; height:calc(100vh - 64px); }
+
+    /* Sidebar: Warehouse list */
+    .wt-sidebar {
+      background:var(--bg-card);
+      border-right:1px solid var(--border);
+      overflow-y:auto;
+      padding:16px;
+    }
+    .wt-section-title {
+      font-size:10px; font-weight:700; color:var(--muted);
+      text-transform:uppercase; letter-spacing:1.5px;
+      margin:0 0 12px;
+    }
+    .wt-warehouse-item {
+      padding:12px 14px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      margin-bottom:8px;
+      cursor:pointer;
+      transition:all 0.2s;
+    }
+    .wt-warehouse-item:hover, .wt-warehouse-item.active {
+      background:rgba(59,130,246,0.1);
+      border-color:var(--blue);
+    }
+    .wt-warehouse-name { font-weight:600; font-size:14px; }
+    .wt-warehouse-meta { font-size:11px; color:var(--muted); margin-top:3px; }
+    .wt-warehouse-badge {
+      display:inline-flex; align-items:center; gap:4px;
+      font-size:11px; padding:2px 8px; border-radius:20px;
+      margin-top:6px;
+    }
+    .badge-green { background:rgba(16,185,129,0.15); color:var(--green); }
+    .badge-yellow { background:rgba(245,158,11,0.15); color:var(--yellow); }
+    .badge-red { background:rgba(239,68,68,0.15); color:var(--red); }
+
+    /* Main: Twin Visualization */
+    .wt-main {
+      overflow:auto;
+      padding:20px;
+      display:flex; flex-direction:column; gap:16px;
+    }
+
+    /* Zone header */
+    .wt-zone-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:8px;
+    }
+    .wt-zone-label {
+      font-size:13px; font-weight:700; color:var(--cyan);
+      letter-spacing:0.5px;
+    }
+
+    /* Zone grid */
+    .wt-zone {
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:16px;
+      margin-bottom:12px;
+    }
+    .wt-zone-top { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+    .wt-zone-icon { font-size:20px; }
+    .wt-zone-name { font-size:15px; font-weight:700; }
+    .wt-zone-stats { font-size:12px; color:var(--sub); }
+
+    /* Racks row */
+    .wt-racks { display:flex; gap:10px; flex-wrap:wrap; }
+
+    /* Rack */
+    .wt-rack {
+      background:rgba(255,255,255,0.02);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:12px;
+      min-width:120px;
+      cursor:pointer;
+      transition:all 0.2s;
+    }
+    .wt-rack:hover { border-color:var(--blue); background:rgba(59,130,246,0.07); transform:translateY(-2px); }
+    .wt-rack.selected { border-color:var(--cyan); background:rgba(6,182,212,0.1); }
+    .wt-rack-name { font-size:12px; font-weight:600; color:var(--text); margin-bottom:8px; }
+
+    /* Shelves in rack (stacked) */
+    .wt-shelves { display:flex; flex-direction:column-reverse; gap:4px; }
+    .wt-shelf {
+      height:16px; border-radius:4px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:9px; font-weight:600; letter-spacing:0.5px;
+      cursor:pointer; transition:all 0.15s;
+      position:relative;
+    }
+    .wt-shelf:hover { filter:brightness(1.4); transform:scaleY(1.2); }
+    .shelf-empty { background:rgba(255,255,255,0.05); color:var(--muted); border:1px dashed rgba(255,255,255,0.08); }
+    .shelf-low { background:rgba(239,68,68,0.35); color:#fca5a5; }
+    .shelf-medium { background:rgba(245,158,11,0.35); color:#fde68a; }
+    .shelf-high { background:rgba(16,185,129,0.35); color:#6ee7b7; }
+    .shelf-full { background:rgba(59,130,246,0.5); color:#bfdbfe; }
+
+    /* Heatmap legend */
+    .wt-legend {
+      display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+      font-size:11px; color:var(--sub);
+      padding:10px 16px;
+      background:var(--bg-card);
+      border-radius:10px;
+      border:1px solid var(--border);
+    }
+    .legend-dot { width:12px; height:12px; border-radius:3px; display:inline-block; margin-right:5px; }
+
+    /* Info panel (right) */
+    .wt-info-panel {
+      background:var(--bg-card);
+      border-left:1px solid var(--border);
+      overflow-y:auto;
+      padding:16px;
+    }
+    .info-placeholder {
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      height:200px; color:var(--muted); font-size:13px; text-align:center; gap:10px;
+    }
+    .info-placeholder i { font-size:36px; opacity:0.3; }
+
+    .info-section { margin-bottom:20px; }
+    .info-section-title { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+
+    .info-kpi {
+      background:rgba(255,255,255,0.02);
+      border:1px solid var(--border);
+      border-radius:8px;
+      padding:10px 14px;
+      margin-bottom:8px;
+    }
+    .info-kpi-label { font-size:11px; color:var(--muted); }
+    .info-kpi-value { font-size:20px; font-weight:700; margin-top:2px; }
+
+    .product-list { display:flex; flex-direction:column; gap:6px; max-height:300px; overflow-y:auto; }
+    .product-row {
+      display:flex; align-items:center; gap:10px;
+      padding:8px 10px;
+      background:rgba(255,255,255,0.02);
+      border:1px solid var(--border);
+      border-radius:8px;
+      font-size:12px;
+    }
+    .product-row-name { flex:1; font-weight:500; }
+    .product-row-qty { font-family:'JetBrains Mono',monospace; font-size:11px; }
+    .product-row-status { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+    .status-ok { background:var(--green); }
+    .status-low { background:var(--yellow); }
+    .status-out { background:var(--red); }
+
+    /* Controls */
+    .wt-controls {
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    }
+    .wt-btn {
+      padding:7px 14px;
+      border-radius:8px;
+      font-size:12px; font-weight:600;
+      cursor:pointer; transition:all 0.2s;
+      display:flex; align-items:center; gap:6px;
+      border:1px solid;
+    }
+    .btn-blue { background:rgba(59,130,246,0.12); border-color:rgba(59,130,246,0.3); color:var(--blue); }
+    .btn-blue:hover { background:rgba(59,130,246,0.25); }
+    .btn-green { background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.3); color:var(--green); }
+    .btn-green:hover { background:rgba(16,185,129,0.25); }
+
+    .view-toggle { display:flex; gap:4px; background:rgba(255,255,255,0.03); padding:4px; border-radius:8px; }
+    .view-btn { padding:5px 12px; border-radius:6px; font-size:12px; border:none; cursor:pointer; color:var(--sub); background:transparent; transition:all 0.2s; }
+    .view-btn.active { background:rgba(59,130,246,0.2); color:var(--blue); font-weight:600; }
+
+    /* Barcode Scanner Modal */
+    .scan-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
+      z-index:1000; align-items:center; justify-content:center;
+    }
+    .scan-overlay.show { display:flex; }
+    .scan-modal {
+      background:var(--bg-panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:28px;
+      width:480px;
+      max-width:90vw;
+    }
+    .scan-input {
+      width:100%; background:rgba(255,255,255,0.04);
+      border:2px solid var(--blue); border-radius:10px;
+      padding:12px 16px; font-size:16px; color:var(--text);
+      font-family:'JetBrains Mono',monospace; margin:16px 0;
+    }
+    .scan-input:focus { outline:none; border-color:var(--cyan); }
+
+    ::-webkit-scrollbar { width:4px; height:4px; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
+  </style>
+</head>
+<body>
+
+<header class="wt-header">
+  <div class="wt-brand">
+    <div class="wt-brand-icon">🏭</div>
+    <div>
+      <div class="wt-title">Warehouse Digital Twin</div>
+      <div class="wt-sub">InventraERP — ECOS Warehouse OS</div>
+    </div>
+  </div>
+  <div class="wt-controls">
+    <div class="view-toggle">
+      <button class="view-btn active" onclick="setView('grid')" id="viewGrid"><i class="bi bi-grid-3x3-gap"></i> Grid</button>
+      <button class="view-btn" onclick="setView('heatmap')" id="viewHeatmap"><i class="bi bi-thermometer"></i> Heatmap</button>
+    </div>
+    <button class="wt-btn btn-blue" onclick="openScanner()"><i class="bi bi-upc-scan"></i> Scan Barcode</button>
+    <button class="wt-btn btn-green" onclick="loadWarehouses()"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
+    <a href="/" style="color:var(--sub);font-size:13px;text-decoration:none;display:flex;align-items:center;gap:6px;">
+      <i class="bi bi-arrow-left"></i> Dashboard
+    </a>
+  </div>
+</header>
+
+<div class="wt-layout">
+  <!-- Sidebar: Warehouse list -->
+  <div class="wt-sidebar">
+    <p class="wt-section-title">Warehouses</p>
+    <div id="warehouseList">
+      <div style="color:var(--muted);font-size:13px;text-align:center;padding:30px;">Loading...</div>
+    </div>
+
+    <p class="wt-section-title" style="margin-top:20px;">Legend</p>
+    <div class="wt-legend" style="flex-direction:column;gap:8px;padding:12px;">
+      <div><span class="legend-dot" style="background:rgba(16,185,129,0.5)"></span>High Stock (75%+)</div>
+      <div><span class="legend-dot" style="background:rgba(59,130,246,0.5)"></span>Full (100%)</div>
+      <div><span class="legend-dot" style="background:rgba(245,158,11,0.5)"></span>Medium (25-75%)</div>
+      <div><span class="legend-dot" style="background:rgba(239,68,68,0.4)"></span>Low Stock (&lt;25%)</div>
+      <div><span class="legend-dot" style="background:rgba(255,255,255,0.05)"></span>Empty</div>
+    </div>
+  </div>
+
+  <!-- Main: Warehouse Grid Twin -->
+  <div class="wt-main" id="warehouseMain">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);gap:16px;">
+      <div style="font-size:64px;opacity:0.15;">🏭</div>
+      <div style="font-size:16px;font-weight:600;">Select a warehouse to view its Digital Twin</div>
+      <div style="font-size:13px;opacity:0.6;">Click any warehouse from the sidebar</div>
+    </div>
+  </div>
+
+  <!-- Info Panel -->
+  <div class="wt-info-panel" id="infoPanel">
+    <p class="wt-section-title">Location Details</p>
+    <div class="info-placeholder">
+      <i class="bi bi-grid"></i>
+      <div>Click a rack or shelf to see inventory details</div>
+    </div>
+  </div>
+</div>
+
+<!-- Barcode Scanner Modal -->
+<div class="scan-overlay" id="scanOverlay" onclick="if(event.target===this)closeScanner()">
+  <div class="scan-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:16px;font-weight:700;"><i class="bi bi-upc-scan" style="color:var(--cyan);margin-right:8px;"></i>Smart Barcode Scanner</div>
+      <button onclick="closeScanner()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-top:8px;">Scan or type a barcode, SKU, serial number, or IMEI</p>
+    <input type="text" class="scan-input" id="scanInput" placeholder="Scan or enter code..." autofocus>
+    <div id="scanResult"></div>
+    <button onclick="doScan()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),var(--cyan));border:none;border-radius:10px;color:white;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;">
+      <i class="bi bi-search"></i> Get Product Intelligence
+    </button>
+  </div>
+</div>
+
+<script>
+  const API = '/api/v1';
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = '/login.html';
+
+  const apiFetch = async (url, opts = {}) => {
+    const res = await fetch(API + url, {
+      ...opts,
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+    });
+    if (res.status === 401) { window.location.href = '/login.html'; }
+    return res.json();
+  };
+
+  let currentView = 'grid';
+  let currentWarehouse = null;
+
+  const setView = (view) => {
+    currentView = view;
+    document.getElementById('viewGrid').classList.toggle('active', view === 'grid');
+    document.getElementById('viewHeatmap').classList.toggle('active', view === 'heatmap');
+    if (currentWarehouse) renderWarehouseTwin(currentWarehouse);
+  };
+
+  // ─── Load Warehouses ─────────────────────────────────────────────────────
+  const loadWarehouses = async () => {
+    try {
+      const res = await apiFetch('/warehouse');
+      const warehouses = res.data || res.warehouses || [];
+      const list = document.getElementById('warehouseList');
+
+      if (!warehouses.length) {
+        list.innerHTML = `<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">No warehouses found.<br><br><a href="/#warehouse/list" style="color:var(--blue);">Add Warehouse</a></div>`;
+        // Show demo warehouse for visualization
+        renderDemoWarehouse();
+        return;
+      }
+
+      list.innerHTML = warehouses.map(w => `
+        <div class="wt-warehouse-item" onclick="selectWarehouse('${w._id}','${w.name}')" id="wh-${w._id}">
+          <div class="wt-warehouse-name">${w.name}</div>
+          <div class="wt-warehouse-meta">${w.city || ''} ${w.state || ''}</div>
+          <div>
+            <span class="wt-warehouse-badge badge-green"><i class="bi bi-check-circle"></i> Active</span>
+          </div>
+        </div>
+      `).join('');
+
+      // Auto-select first
+      if (warehouses.length > 0) selectWarehouse(warehouses[0]._id, warehouses[0].name);
+    } catch {
+      renderDemoWarehouse();
+    }
+  };
+
+  // ─── Select Warehouse ─────────────────────────────────────────────────────
+  const selectWarehouse = async (id, name) => {
+    document.querySelectorAll('.wt-warehouse-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(`wh-${id}`)?.classList.add('active');
+    currentWarehouse = { id, name };
+
+    try {
+      const res = await apiFetch(`/warehouse/${id}/zones`);
+      currentWarehouse.data = res.data;
+    } catch {}
+
+    renderWarehouseTwin(currentWarehouse);
+  };
+
+  // ─── Render Warehouse Twin ────────────────────────────────────────────────
+  const renderWarehouseTwin = (wh) => {
+    const main = document.getElementById('warehouseMain');
+    const zones = wh.data || generateDemoZones(wh.name);
+
+    main.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:18px;font-weight:700;">🏭 ${wh.name}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:3px;">${zones.length} zones • ${zones.reduce((s,z)=>s+z.racks.length,0)} racks • ${currentView === 'heatmap' ? '🔥 Heatmap Mode' : '📐 Grid Mode'}</div>
+        </div>
+      </div>
+      ${zones.map(zone => renderZone(zone)).join('')}
+    `;
+  };
+
+  const renderZone = (zone) => {
+    const fillPct = zone.racks.length > 0
+      ? Math.round(zone.racks.reduce((s,r)=>s+r.fillPercent,0)/zone.racks.length)
+      : 0;
+    const zoneColor = fillPct >= 75 ? 'var(--green)' : fillPct >= 40 ? 'var(--yellow)' : 'var(--red)';
+
+    return `
+      <div class="wt-zone">
+        <div class="wt-zone-top">
+          <span class="wt-zone-icon">📦</span>
+          <div>
+            <div class="wt-zone-name">${zone.name}</div>
+            <div class="wt-zone-stats">${zone.racks.length} racks • Avg ${fillPct}% fill</div>
+          </div>
+          <div style="margin-left:auto;padding:4px 12px;border-radius:20px;background:rgba(0,0,0,0.3);border:1px solid ${zoneColor};color:${zoneColor};font-size:12px;font-weight:600;">${fillPct}% filled</div>
+        </div>
+        <div class="wt-racks">
+          ${zone.racks.map(rack => renderRack(rack, zone)).join('')}
+        </div>
+      </div>
+    `;
+  };
+
+  const renderRack = (rack, zone) => {
+    return `
+      <div class="wt-rack" onclick="showRackInfo(${JSON.stringify(rack).replace(/"/g,'&quot;')}, '${zone.name}')">
+        <div class="wt-rack-name">📐 ${rack.name}</div>
+        <div class="wt-shelves">
+          ${rack.shelves.map(shelf => renderShelf(shelf)).join('')}
+        </div>
+        <div style="margin-top:6px;font-size:10px;color:var(--muted);text-align:center;">${rack.shelves.length} shelves</div>
+      </div>
+    `;
+  };
+
+  const renderShelf = (shelf) => {
+    const fill = shelf.fillPercent || 0;
+    let cls, label;
+    if (fill === 0) { cls='shelf-empty'; label='Empty'; }
+    else if (fill < 25) { cls='shelf-low'; label=`${fill}%`; }
+    else if (fill < 75) { cls='shelf-medium'; label=`${fill}%`; }
+    else if (fill < 100) { cls='shelf-high'; label=`${fill}%`; }
+    else { cls='shelf-full'; label='FULL'; }
+
+    return `<div class="wt-shelf ${cls}" title="Shelf ${shelf.name}: ${fill}% filled">${label}</div>`;
+  };
+
+  // ─── Show Rack Info Panel ─────────────────────────────────────────────────
+  const showRackInfo = (rack, zoneName) => {
+    const panel = document.getElementById('infoPanel');
+
+    panel.innerHTML = `
+      <p class="wt-section-title">${zoneName} → ${rack.name}</p>
+
+      <div class="info-section">
+        <div class="info-kpi">
+          <div class="info-kpi-label">Fill Level</div>
+          <div class="info-kpi-value" style="color:${rack.fillPercent >= 75 ? 'var(--green)' : rack.fillPercent >= 40 ? 'var(--yellow)' : 'var(--red)'}">
+            ${rack.fillPercent || 0}%
+          </div>
+        </div>
+        <div class="info-kpi">
+          <div class="info-kpi-label">SKUs</div>
+          <div class="info-kpi-value">${rack.products?.length || rack.shelves?.reduce((s,sh)=>s+(sh.products?.length||0),0) || 0}</div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <p class="info-section-title">Shelves</p>
+        ${rack.shelves.map(shelf => `
+          <div class="info-kpi" style="padding:8px 12px;margin-bottom:6px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:600;font-size:13px;">${shelf.name}</div>
+              <div style="font-size:12px;color:${shelf.fillPercent >= 75 ? 'var(--green)' : shelf.fillPercent >= 40 ? 'var(--yellow)' : 'var(--red)'};">${shelf.fillPercent}%</div>
+            </div>
+            ${shelf.products?.length ? `<div style="font-size:11px;color:var(--muted);margin-top:3px;">${shelf.products[0].name}${shelf.products.length > 1 ? ` +${shelf.products.length-1} more` : ''}</div>` : '<div style="font-size:11px;color:var(--muted);margin-top:2px;">Empty</div>'}
+          </div>
+        `).join('')}
+      </div>
+
+      ${rack.products?.length ? `
+        <div class="info-section">
+          <p class="info-section-title">Products in Rack</p>
+          <div class="product-list">
+            ${rack.products.slice(0, 15).map(p => `
+              <div class="product-row">
+                <div class="product-row-status ${p.qty <= 0 ? 'status-out' : p.qty <= 10 ? 'status-low' : 'status-ok'}"></div>
+                <div class="product-row-name">${p.name}</div>
+                <div class="product-row-qty">${p.qty} ${p.unit || 'PCS'}</div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      ` : ''}
+    `;
+  };
+
+  // ─── Demo Warehouse (when no API data) ────────────────────────────────────
+  const generateDemoZones = (warehouseName) => {
+    const zones = [];
+    const zoneNames = ['Zone A — Receiving', 'Zone B — Fast Moving', 'Zone C — Cold Storage', 'Zone D — Dispatch'];
+    const rackPrefixes = ['R', 'S', 'T', 'U'];
+    const shelfNames = ['Shelf-1', 'Shelf-2', 'Shelf-3', 'Shelf-4', 'Shelf-5'];
+
+    zoneNames.forEach((zoneName, zi) => {
+      const racks = [];
+      for (let r = 1; r <= 6; r++) {
+        const shelves = shelfNames.map(sName => ({
+          name: sName,
+          fillPercent: Math.floor(Math.random() * 100),
+          products: Math.random() > 0.3 ? [{ name: `Product ${Math.floor(Math.random()*999)}`, qty: Math.floor(Math.random()*200) }] : []
+        }));
+        const avgFill = Math.round(shelves.reduce((s,sh)=>s+sh.fillPercent,0)/shelves.length);
+        racks.push({ name: `${rackPrefixes[zi]}${r}`, shelves, fillPercent: avgFill, products: shelves.flatMap(s=>s.products) });
+      }
+      zones.push({ name: zoneName, racks });
+    });
+    return zones;
+  };
+
+  const renderDemoWarehouse = () => {
+    const demo = { id: 'demo', name: 'Main Warehouse (Demo)', data: generateDemoZones('Main Warehouse') };
+    currentWarehouse = demo;
+    renderWarehouseTwin(demo);
+    document.getElementById('warehouseList').innerHTML = `
+      <div class="wt-warehouse-item active">
+        <div class="wt-warehouse-name">🏭 Main Warehouse (Demo)</div>
+        <div class="wt-warehouse-meta">Sample visualization</div>
+        <div><span class="wt-warehouse-badge badge-green">Demo Mode</span></div>
+      </div>
+    `;
+  };
+
+  // ─── Barcode Scanner ──────────────────────────────────────────────────────
+  const openScanner = () => {
+    document.getElementById('scanOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('scanInput').focus(), 100);
+  };
+  const closeScanner = () => {
+    document.getElementById('scanOverlay').classList.remove('show');
+    document.getElementById('scanResult').innerHTML = '';
+    document.getElementById('scanInput').value = '';
+  };
+
+  const doScan = async () => {
+    const code = document.getElementById('scanInput').value.trim();
+    if (!code) return;
+
+    const resultDiv = document.getElementById('scanResult');
+    resultDiv.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:12px 0;text-align:center;"><i class="bi bi-hourglass-split"></i> Scanning...</div>`;
+
+    try {
+      const res = await apiFetch(`/barcode/scan?code=${encodeURIComponent(code)}`);
+      if (!res.success || !res.data?.found) {
+        resultDiv.innerHTML = `<div style="color:var(--red);font-size:13px;padding:12px 0;text-align:center;"><i class="bi bi-x-circle"></i> Product not found for code: ${code}</div>`;
+        return;
+      }
+
+      const d = res.data;
+      resultDiv.innerHTML = `
+        <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2);border-radius:10px;padding:14px;margin-top:12px;">
+          <div style="font-weight:700;font-size:15px;margin-bottom:8px;">✅ ${d.product.name}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;">
+            <div><span style="color:var(--muted)">SKU:</span> ${d.product.sku || '—'}</div>
+            <div><span style="color:var(--muted)">Category:</span> ${d.product.category || '—'}</div>
+            <div><span style="color:var(--muted)">Stock:</span> <strong style="color:${d.inventory.isOutOfStock?'var(--red)':d.inventory.isLowStock?'var(--yellow)':'var(--green)'}">${d.inventory.availableStock}</strong></div>
+            <div><span style="color:var(--muted)">Price:</span> ₹${d.pricing.sellingPrice}</div>
+            <div><span style="color:var(--muted)">Margin:</span> ${d.pricing.marginPercent}%</div>
+            <div><span style="color:var(--muted)">90d Sold:</span> ${d.sales.last90Days.quantitySold}</div>
+          </div>
+          ${d.inventory.locations?.length ? `<div style="margin-top:8px;font-size:11px;color:var(--muted);">📍 ${d.inventory.locations[0].warehouse} ${d.inventory.locations[0].zone ? '→ '+d.inventory.locations[0].zone : ''}</div>` : ''}
+          ${d.batches.soonestExpiry ? `<div style="margin-top:4px;font-size:11px;color:var(--yellow);">⚠️ Nearest expiry: ${new Date(d.batches.soonestExpiry).toLocaleDateString('en-IN')}</div>` : ''}
+        </div>
+      `;
+    } catch (err) {
+      resultDiv.innerHTML = `<div style="color:var(--red);font-size:12px;">Error: ${err.message}</div>`;
+    }
+  };
+
+  document.getElementById('scanInput').addEventListener('keydown', e => { if (e.key === 'Enter') doScan(); });
+
+  // ─── Boot ─────────────────────────────────────────────────────────────────
+  loadWarehouses();
+</script>
+</body>
+</html>

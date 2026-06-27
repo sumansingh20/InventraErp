@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="description" content="Inventra Enterprise ERP — Complete cloud-based business management. Inventory, POS, Accounting, CRM, HRMS, Manufacturing & more.">
+  <meta name="theme-color" content="#0b0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <title>Inventra Enterprise ERP</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+  <!-- Bootstrap (grid + utilities only - visual overridden) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
+  <!-- DataTables -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+
+  <!-- Design System (order matters!) -->
+  <link rel="stylesheet" href="/css/design-tokens.css">
+  <link rel="stylesheet" href="/css/animations.css">
+  <link rel="stylesheet" href="/css/components.css">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/themes.css">
+</head>
+<body class="app-loading">
+
+<!-- ═══════════════════════════════════════════════════════
+     APP LOADER
+     ═══════════════════════════════════════════════════════ -->
+<div id="appLoader" class="app-loader">
+  <div class="loader-content">
+    <div class="loader-logo-mark">
+      <i class="bi bi-boxes"></i>
+    </div>
+    <div class="loader-brand-name">Inventra</div>
+    <div class="loader-tagline">Enterprise ERP Platform</div>
+    <div class="loader-steps">
+      <div class="loader-step" id="lStep1">Connecting to server...</div>
+    </div>
+    <div class="loader-progress-track">
+      <div class="loader-progress-fill" id="loaderProgressFill"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN APP SHELL
+     ═══════════════════════════════════════════════════════ -->
+<div id="app" class="app-shell" style="display:none;">
+
+  <!-- Sidebar Overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- ─── SIDEBAR ─────────────────────────────────────────── -->
+  <aside id="sidebar" class="app-sidebar">
+    <!-- Header -->
+    <div class="sidebar-header">
+      <a href="#" class="brand-link" data-route="dashboard">
+        <div class="brand-mark"><i class="bi bi-boxes"></i></div>
+        <div class="brand-text">
+          <span class="brand-name">Inventra</span>
+          <span class="brand-subtitle">Enterprise ERP</span>
+        </div>
+      </a>
+      <button class="sidebar-collapse-btn" id="sidebarCollapseBtn" title="Collapse sidebar" aria-label="Toggle sidebar">
+        <i class="bi bi-layout-sidebar-reverse"></i>
+      </button>
+    </div>
+
+    <!-- Company Switcher -->
+    <div style="padding: var(--space-2) var(--space-2);">
+      <button class="company-switcher" id="companySwitcherBtn" title="Switch company">
+        <div class="company-logo" id="companyLogo">I</div>
+        <div class="company-details">
+          <span class="company-name-text" id="companyNameText">Loading...</span>
+          <span class="company-plan-badge" id="companyPlanBadge">Trial</span>
+        </div>
+        <i class="bi bi-chevron-expand company-switcher-icon"></i>
+      </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav" id="sidebarNav" aria-label="Main navigation">
+
+      <!-- Overview -->
+      <div class="nav-section">
+        <span class="nav-section-label">Overview</span>
+        <a href="#" class="nav-item active" data-route="dashboard" id="nav-dashboard" aria-current="page">
+          <i class="bi bi-speedometer2 nav-item-icon"></i>
+          <span class="nav-item-label">Dashboard</span>
+        </a>
+      </div>
+
+      <!-- Inventra ECOS -->
+      <div class="nav-section">
+        <span class="nav-section-label">Inventra ECOS</span>
+        <a href="/command-center.html" class="nav-item" id="nav-command-center">
+          <i class="bi bi-lightning-fill nav-item-icon" style="color:hsl(243,80%,70%);"></i>
+          <span class="nav-item-label">Command Center</span>
+        </a>
+        <a href="/analytics-ceo.html" class="nav-item" id="nav-ceo-analytics">
+          <i class="bi bi-bar-chart-fill nav-item-icon" style="color:hsl(262,80%,70%);"></i>
+          <span class="nav-item-label">CEO Analytics</span>
+        </a>
+        <a href="/warehouse-twin.html" class="nav-item" id="nav-warehouse-twin">
+          <i class="bi bi-building nav-item-icon" style="color:hsl(199,89%,55%);"></i>
+          <span class="nav-item-label">Warehouse Twin</span>
+        </a>
+      </div>
+
+      <!-- Inventory -->
+      <div class="nav-section">
+        <span class="nav-section-label">Inventory</span>
+        <a href="#" class="nav-item" data-route="inventory/products" id="nav-products">
+          <i class="bi bi-box-seam nav-item-icon"></i>
+          <span class="nav-item-label">Products</span>
+          <span class="nav-item-badge" id="lowStockBadge" style="display:none;"></span>
+        </a>
+        <a href="#" class="nav-item" data-route="inventory/categories" id="nav-categories">
+          <i class="bi bi-tags nav-item-icon"></i>
+          <span class="nav-item-label">Categories</span>
+        </a>
+        <a href="#" class="nav-item" data-route="inventory/stock" id="nav-stock">
+          <i class="bi bi-stack nav-item-icon"></i>
+          <span class="nav-item-label">Stock Levels</span>
+        </a>
+        <a href="#" class="nav-item" data-route="inventory/movements" id="nav-movements">
+          <i class="bi bi-arrow-left-right nav-item-icon"></i>
+          <span class="nav-item-label">Stock Movements</span>
+        </a>
+        <a href="#" class="nav-item" data-route="inventory/adjustments" id="nav-adjustments">
+          <i class="bi bi-pencil-square nav-item-icon"></i>
+          <span class="nav-item-label">Adjustments</span>
+        </a>
+        <a href="#" class="nav-item" data-route="inventory/barcode" id="nav-barcode">
+          <i class="bi bi-upc-scan nav-item-icon"></i>
+          <span class="nav-item-label">Barcode & Labels</span>
+        </a>
+      </div>
+
+      <!-- Point of Sale -->
+      <div class="nav-section" data-module-guard="pos">
+        <span class="nav-section-label">Point of Sale</span>
+        <a href="#" class="nav-item" data-route="pos/terminal" id="nav-pos-terminal">
+          <i class="bi bi-display nav-item-icon"></i>
+          <span class="nav-item-label">POS Terminal</span>
+        </a>
+        <a href="#" class="nav-item" data-route="pos/bills" id="nav-pos-bills">
+          <i class="bi bi-receipt nav-item-icon"></i>
+          <span class="nav-item-label">Bills & Receipts</span>
+        </a>
+      </div>
+
+      <!-- Sales -->
+      <div class="nav-section" data-module-guard="sales">
+        <span class="nav-section-label">Sales</span>
+        <a href="#" class="nav-item" data-route="sales/invoices" id="nav-invoices">
+          <i class="bi bi-file-earmark-text nav-item-icon"></i>
+          <span class="nav-item-label">Invoices</span>
+        </a>
+        <a href="#" class="nav-item" data-route="sales/orders" id="nav-sales-orders">
+          <i class="bi bi-bag-check nav-item-icon"></i>
+          <span class="nav-item-label">Sales Orders</span>
+        </a>
+        <a href="#" class="nav-item" data-route="sales/quotations" id="nav-quotations">
+          <i class="bi bi-file-earmark-richtext nav-item-icon"></i>
+          <span class="nav-item-label">Quotations</span>
+        </a>
+        <a href="#" class="nav-item" data-route="sales/customers" id="nav-customers">
+          <i class="bi bi-people nav-item-icon"></i>
+          <span class="nav-item-label">Customers</span>
+        </a>
+        <a href="#" class="nav-item" data-route="sales/payments" id="nav-receipts">
+          <i class="bi bi-cash-stack nav-item-icon"></i>
+          <span class="nav-item-label">Receipts</span>
+        </a>
+      </div>
+
+      <!-- Purchase -->
+      <div class="nav-section" data-module-guard="purchase">
+        <span class="nav-section-label">Purchase</span>
+        <a href="#" class="nav-item" data-route="purchase/orders" id="nav-purchase-orders">
+          <i class="bi bi-cart-plus nav-item-icon"></i>
+          <span class="nav-item-label">Purchase Orders</span>
+        </a>
+        <a href="#" class="nav-item" data-route="purchase/grn" id="nav-grn">
+          <i class="bi bi-inboxes nav-item-icon"></i>
+          <span class="nav-item-label">GRN</span>
+        </a>
+        <a href="#" class="nav-item" data-route="purchase/suppliers" id="nav-suppliers">
+          <i class="bi bi-truck nav-item-icon"></i>
+          <span class="nav-item-label">Suppliers</span>
+        </a>
+        <a href="#" class="nav-item" data-route="purchase/payments" id="nav-purchase-payments">
+          <i class="bi bi-credit-card nav-item-icon"></i>
+          <span class="nav-item-label">Payments</span>
+        </a>
+      </div>
+
+      <!-- Accounting -->
+      <div class="nav-section" data-module-guard="accounting">
+        <span class="nav-section-label">Accounting</span>
+        <a href="#" class="nav-item" data-route="accounting/ledger" id="nav-ledger">
+          <i class="bi bi-book nav-item-icon"></i>
+          <span class="nav-item-label">Ledger</span>
+        </a>
+        <a href="#" class="nav-item" data-route="accounting/journal" id="nav-journal">
+          <i class="bi bi-journal-text nav-item-icon"></i>
+          <span class="nav-item-label">Journal Entries</span>
+        </a>
+        <a href="#" class="nav-item" data-route="accounting/accounts" id="nav-coa">
+          <i class="bi bi-diagram-3 nav-item-icon"></i>
+          <span class="nav-item-label">Chart of Accounts</span>
+        </a>
+        <a href="#" class="nav-item" data-route="accounting/expenses" id="nav-expenses">
+          <i class="bi bi-wallet2 nav-item-icon"></i>
+          <span class="nav-item-label">Expenses</span>
+        </a>
+        <!-- Financial Reports submenu -->
+        <button class="nav-item" id="navFinReportsToggle">
+          <i class="bi bi-bar-chart-line nav-item-icon"></i>
+          <span class="nav-item-label">Financial Reports</span>
+          <i class="bi bi-chevron-right nav-chevron"></i>
+        </button>
+        <div class="nav-sub" id="navFinReportsSub">
+          <a href="#" class="nav-sub-item" data-route="accounting/profit-loss">P&L Statement</a>
+          <a href="#" class="nav-sub-item" data-route="accounting/balance-sheet">Balance Sheet</a>
+          <a href="#" class="nav-sub-item" data-route="accounting/trial-balance">Trial Balance</a>
+          <a href="#" class="nav-sub-item" data-route="accounting/cash-book">Cash Book</a>
+        </div>
+      </div>
+
+      <!-- GST & Tax -->
+      <div class="nav-section" data-module-guard="gst">
+        <span class="nav-section-label">GST & Tax</span>
+        <a href="#" class="nav-item" data-route="gst/gstr1" id="nav-gstr1">
+          <i class="bi bi-file-earmark-spreadsheet nav-item-icon"></i>
+          <span class="nav-item-label">GSTR-1</span>
+        </a>
+        <a href="#" class="nav-item" data-route="gst/gstr2" id="nav-gstr2">
+          <i class="bi bi-file-earmark-excel nav-item-icon"></i>
+          <span class="nav-item-label">GSTR-2</span>
+        </a>
+        <a href="#" class="nav-item" data-route="gst/hsn" id="nav-hsn">
+          <i class="bi bi-grid-3x3-gap nav-item-icon"></i>
+          <span class="nav-item-label">HSN Summary</span>
+        </a>
+      </div>
+
+      <!-- CRM -->
+      <div class="nav-section" data-module-guard="crm">
+        <span class="nav-section-label">CRM</span>
+        <a href="#" class="nav-item" data-route="crm/leads" id="nav-leads">
+          <i class="bi bi-funnel nav-item-icon"></i>
+          <span class="nav-item-label">Leads</span>
+        </a>
+        <a href="#" class="nav-item" data-route="crm/opportunities" id="nav-opportunities">
+          <i class="bi bi-lightning nav-item-icon"></i>
+          <span class="nav-item-label">Opportunities</span>
+        </a>
+        <a href="#" class="nav-item" data-route="crm/activities" id="nav-activities">
+          <i class="bi bi-calendar-check nav-item-icon"></i>
+          <span class="nav-item-label">Activities</span>
+        </a>
+      </div>
+
+      <!-- HR & Payroll -->
+      <div class="nav-section" data-module-guard="hrms">
+        <span class="nav-section-label">HR & Payroll</span>
+        <a href="#" class="nav-item" data-route="hrms/employees" id="nav-employees">
+          <i class="bi bi-person-badge nav-item-icon"></i>
+          <span class="nav-item-label">Employees</span>
+        </a>
+        <a href="#" class="nav-item" data-route="hrms/attendance" id="nav-attendance">
+          <i class="bi bi-calendar3 nav-item-icon"></i>
+          <span class="nav-item-label">Attendance</span>
+        </a>
+        <a href="#" class="nav-item" data-route="hrms/leaves" id="nav-leaves">
+          <i class="bi bi-calendar-x nav-item-icon"></i>
+          <span class="nav-item-label">Leave Management</span>
+        </a>
+        <a href="#" class="nav-item" data-route="hrms/payroll" id="nav-payroll">
+          <i class="bi bi-cash-coin nav-item-icon"></i>
+          <span class="nav-item-label">Payroll</span>
+        </a>
+      </div>
+
+      <!-- Manufacturing -->
+      <div class="nav-section" data-module-guard="manufacturing">
+        <span class="nav-section-label">Manufacturing</span>
+        <a href="#" class="nav-item" data-route="manufacturing/bom" id="nav-bom">
+          <i class="bi bi-diagram-2 nav-item-icon"></i>
+          <span class="nav-item-label">Bill of Materials</span>
+        </a>
+        <a href="#" class="nav-item" data-route="manufacturing/work-orders" id="nav-work-orders">
+          <i class="bi bi-gear-wide-connected nav-item-icon"></i>
+          <span class="nav-item-label">Work Orders</span>
+        </a>
+      </div>
+
+      <!-- Warehouse -->
+      <div class="nav-section" data-module-guard="warehouse">
+        <span class="nav-section-label">Warehouse</span>
+        <a href="#" class="nav-item" data-route="warehouse/list" id="nav-warehouses">
+          <i class="bi bi-building nav-item-icon"></i>
+          <span class="nav-item-label">Warehouses</span>
+        </a>
+        <a href="#" class="nav-item" data-route="warehouse/zones" id="nav-zones">
+          <i class="bi bi-grid nav-item-icon"></i>
+          <span class="nav-item-label">Zones & Bins</span>
+        </a>
+        <a href="#" class="nav-item" data-route="warehouse/transfers" id="nav-transfers">
+          <i class="bi bi-arrow-repeat nav-item-icon"></i>
+          <span class="nav-item-label">Transfers</span>
+        </a>
+      </div>
+
+      <!-- Reports -->
+      <div class="nav-section">
+        <span class="nav-section-label">Reports & Analytics</span>
+        <a href="#" class="nav-item" data-route="reports/sales" id="nav-sales-reports">
+          <i class="bi bi-graph-up-arrow nav-item-icon"></i>
+          <span class="nav-item-label">Sales Reports</span>
+        </a>
+        <a href="#" class="nav-item" data-route="reports/inventory" id="nav-inv-reports">
+          <i class="bi bi-archive nav-item-icon"></i>
+          <span class="nav-item-label">Inventory Reports</span>
+        </a>
+        <a href="#" class="nav-item" data-route="reports/finance" id="nav-fin-reports">
+          <i class="bi bi-currency-rupee nav-item-icon"></i>
+          <span class="nav-item-label">Finance Reports</span>
+        </a>
+      </div>
+
+      <!-- Administration -->
+      <div class="nav-section" data-module-guard="admin">
+        <span class="nav-section-label">Administration</span>
+        <a href="#" class="nav-item" data-route="admin/users" id="nav-users">
+          <i class="bi bi-people-fill nav-item-icon"></i>
+          <span class="nav-item-label">Users & Roles</span>
+        </a>
+        <a href="#" class="nav-item" data-route="admin/branches" id="nav-branches">
+          <i class="bi bi-geo-alt nav-item-icon"></i>
+          <span class="nav-item-label">Branches</span>
+        </a>
+        <a href="#" class="nav-item" data-route="admin/company" id="nav-company">
+          <i class="bi bi-building-gear nav-item-icon"></i>
+          <span class="nav-item-label">Company Settings</span>
+        </a>
+      </div>
+
+    </nav>
+
+    <!-- Sidebar Footer: User Profile -->
+    <div class="sidebar-footer">
+      <div class="user-profile" id="userProfileArea">
+        <div class="user-avatar" id="userAvatarEl">U</div>
+        <div class="user-info">
+          <span class="user-name-text" id="userNameText">Loading...</span>
+          <span class="user-role-text" id="userRoleText">—</span>
+        </div>
+        <div class="user-actions">
+          <button class="btn-icon sm" id="themeToggleBtn" title="Toggle theme" aria-label="Toggle dark/light mode">
+            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+          </button>
+          <button class="btn-icon sm" id="logoutBtn" title="Sign out" aria-label="Sign out">
+            <i class="bi bi-box-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ─── MAIN CONTENT ─────────────────────────────────────── -->
+  <main class="app-main" id="appMain">
+
+    <!-- Topbar -->
+    <header class="app-topbar" id="appTopbar">
+      <div class="topbar-left">
+        <!-- Mobile menu -->
+        <button class="btn-icon mobile-menu-btn" id="mobileSidebarToggle" aria-label="Open navigation">
+          <i class="bi bi-list"></i>
+        </button>
+
+        <!-- Breadcrumb -->
+        <nav aria-label="Breadcrumb" class="topbar-breadcrumb">
+          <ol class="breadcrumb" id="breadcrumbList">
+            <li class="breadcrumb-item active">Dashboard</li>
+          </ol>
+        </nav>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Global Search (Ctrl+K) -->
+        <div class="global-search d-none d-md-flex">
+          <button class="search-trigger" id="searchTrigger" aria-label="Search (Ctrl+K)">
+            <i class="bi bi-search" style="font-size:13px;"></i>
+            <span class="search-trigger-text">Search... </span>
+            <span class="search-kbd">Ctrl K</span>
+          </button>
+        </div>
+
+        <!-- Notifications -->
+        <div class="notif-trigger dropdown">
+          <button class="btn-icon" id="notifBtn" data-bs-toggle="dropdown" aria-label="Notifications" title="Notifications">
+            <i class="bi bi-bell"></i>
+            <span class="notif-count" id="notifCount" style="display:none;">0</span>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end p-0" id="notifDropdown" style="width:360px;max-height:520px;overflow:hidden;display:flex;flex-direction:column;border-radius:var(--radius-2xl);">
+            <div class="notif-panel-header">
+              <span>Notifications</span>
+              <button class="btn btn-ghost-primary btn-xs" id="markAllReadBtn">Mark all read</button>
+            </div>
+            <div class="notif-panel-list" id="notifList">
+              <div class="notif-empty">
+                <i class="bi bi-bell-slash" style="font-size:32px;opacity:0.3;"></i>
+                <span>No notifications</span>
+              </div>
+            </div>
+            <div class="notif-panel-footer">
+              <a href="#" class="auth-link" style="font-size:13px;">View all notifications</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="dropdown">
+          <button class="btn-icon" data-bs-toggle="dropdown" title="Quick actions" aria-label="Quick actions">
+            <i class="bi bi-lightning-charge"></i>
+          </button>
+          <div class="dropdown-menu dropdown-menu-end">
+            <div class="dropdown-label">Quick Actions</div>
+            <a class="dropdown-item" href="#" data-route="pos/terminal"><i class="bi bi-display"></i> Open POS Terminal</a>
+            <a class="dropdown-item" href="#" data-route="sales/invoices" data-action="new"><i class="bi bi-file-earmark-plus"></i> New Invoice</a>
+            <a class="dropdown-item" href="#" data-route="purchase/orders" data-action="new"><i class="bi bi-cart-plus"></i> New Purchase Order</a>
+            <a class="dropdown-item" href="#" data-route="sales/customers" data-action="new"><i class="bi bi-person-plus"></i> Add Customer</a>
+            <a class="dropdown-item" href="#" data-route="inventory/products" data-action="new"><i class="bi bi-box-seam"></i> Add Product</a>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="#" data-route="reports/sales"><i class="bi bi-graph-up"></i> Sales Report</a>
+          </div>
+        </div>
+
+        <!-- Connection -->
+        <div class="connection-indicator" id="connectionStatus" title="Real-time connection">
+          <div class="connection-dot" id="connectionDot"></div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <div class="page-content" id="pageContent">
+      <!-- Module pages rendered here -->
+      <div id="pageLoading" style="display:flex;align-items:center;justify-content:center;height:300px;">
+        <!-- Skeleton loader -->
+        <div style="width:100%;max-width:800px;">
+          <div class="skeleton skeleton-block" style="height:48px;margin-bottom:24px;"></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;">
+            <div class="skeleton skeleton-block" style="height:120px;"></div>
+            <div class="skeleton skeleton-block" style="height:120px;"></div>
+            <div class="skeleton skeleton-block" style="height:120px;"></div>
+            <div class="skeleton skeleton-block" style="height:120px;"></div>
+          </div>
+          <div class="skeleton skeleton-block" style="height:300px;"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     COMMAND PALETTE
+     ═══════════════════════════════════════════════════════ -->
+<div id="commandPalette" style="display:none;" role="dialog" aria-label="Command palette" aria-modal="true">
+  <div class="command-palette-backdrop" id="commandPaletteBackdrop">
+    <div class="command-palette" id="commandPaletteBox">
+      <div class="command-input-wrapper">
+        <i class="bi bi-search command-search-icon"></i>
+        <input type="text" class="command-input" id="commandInput" placeholder="Search modules, actions, records..." autocomplete="off" spellcheck="false">
+        <span class="command-key">Esc</span>
+      </div>
+      <div class="command-results" id="commandResults">
+        <!-- Results injected by JS -->
+      </div>
+      <div class="command-footer">
+        <span class="command-hint"><span class="command-key">↑</span><span class="command-key">↓</span> Navigate</span>
+        <span class="command-hint"><span class="command-key">↵</span> Select</span>
+        <span class="command-hint"><span class="command-key">Esc</span> Close</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     CONFIRM MODAL
+     ═══════════════════════════════════════════════════════ -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmModalTitle">Confirm Action</h5>
+        <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="Close">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="confirmModalBody">Are you sure?</div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmModalBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     TOAST CONTAINER
+     ═══════════════════════════════════════════════════════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MOBILE BOTTOM NAV
+     ═══════════════════════════════════════════════════════ -->
+<nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+  <div class="mobile-nav-items">
+    <button class="mobile-nav-item active" data-route="dashboard">
+      <i class="bi bi-speedometer2 mobile-nav-item-icon"></i>
+      <span class="mobile-nav-item-label">Dashboard</span>
+    </button>
+    <button class="mobile-nav-item" data-route="inventory/products">
+      <i class="bi bi-box-seam mobile-nav-item-icon"></i>
+      <span class="mobile-nav-item-label">Inventory</span>
+    </button>
+    <button class="mobile-nav-item" data-route="pos/terminal">
+      <i class="bi bi-display mobile-nav-item-icon"></i>
+      <span class="mobile-nav-item-label">POS</span>
+    </button>
+    <button class="mobile-nav-item" data-route="sales/invoices">
+      <i class="bi bi-file-earmark-text mobile-nav-item-icon"></i>
+      <span class="mobile-nav-item-label">Sales</span>
+    </button>
+    <button class="mobile-nav-item" id="mobileMoreBtn">
+      <i class="bi bi-grid mobile-nav-item-icon"></i>
+      <span class="mobile-nav-item-label">More</span>
+    </button>
+  </div>
+</nav>
+
+<!-- FAB for mobile -->
+<button class="fab" id="mobileFAB" title="Quick actions" aria-label="Quick actions">
+  <i class="bi bi-plus-lg"></i>
+</button>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS
+     ═══════════════════════════════════════════════════════ -->
+
+<!-- jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+
+<!-- Bootstrap -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<!-- DataTables -->
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+<!-- Socket.io -->
+<script src="/socket.io/socket.io.js"></script>
+
+<!-- App Core -->
+<script src="/js/api.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/socket.js"></script>
+<script src="/js/app.js"></script>
+
+<!-- Module Scripts -->
+<script src="/js/modules/dashboard.js"></script>
+<script src="/js/modules/inventory.js"></script>
+<script src="/js/modules/pos.js"></script>
+<script src="/js/modules/sales.js"></script>
+<script src="/js/modules/purchase.js"></script>
+<script src="/js/modules/accounting.js"></script>
+<script src="/js/modules/crm.js"></script>
+<script src="/js/modules/hrms.js"></script>
+<script src="/js/modules/manufacturing.js"></script>
+<script src="/js/modules/warehouse.js"></script>
+<script src="/js/modules/reports.js"></script>
+<script src="/js/modules/gst.js"></script>
+<script src="/js/modules/admin.js"></script>
+
+<!-- Service Worker -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .catch(err => console.log('SW registration failed:', err));
+    });
+  }
+</script>
+</body>
+</html>

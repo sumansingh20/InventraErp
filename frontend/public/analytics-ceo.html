@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CEO Business Intelligence — InventraERP</title>
+  <meta name="description" content="CEO executive dashboard with real-time revenue, profit, forecasts, and AI business briefing.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #030912;
+      --bg-card: #07111f;
+      --bg-panel: #0b1a30;
+      --border: rgba(99,179,237,0.1);
+      --blue: #3b82f6; --cyan: #06b6d4; --green: #10b981;
+      --yellow: #f59e0b; --red: #ef4444; --purple: #8b5cf6;
+      --text: #e2e8f0; --sub: #94a3b8; --muted: #64748b;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+    /* Background grid */
+    body::before {
+      content:'';
+      position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px);
+      background-size:60px 60px;
+      pointer-events:none; z-index:0;
+    }
+
+    .page { position:relative; z-index:1; max-width:1600px; margin:0 auto; padding:28px 24px; }
+
+    /* Header */
+    .ceo-header {
+      display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:16px;
+      margin-bottom:28px;
+    }
+    .greeting { font-size:28px; font-weight:900; letter-spacing:-1px; }
+    .greeting span { background:linear-gradient(135deg,var(--blue),var(--cyan)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .greeting-sub { font-size:14px; color:var(--sub); margin-top:5px; }
+
+    .period-selector { display:flex; gap:4px; background:rgba(255,255,255,0.03); padding:4px; border-radius:10px; }
+    .period-btn { padding:7px 16px; border-radius:8px; font-size:13px; border:none; cursor:pointer; color:var(--sub); background:transparent; transition:all 0.2s; }
+    .period-btn.active { background:rgba(59,130,246,0.2); color:var(--blue); font-weight:600; }
+
+    /* Grid */
+    .ceo-grid { display:grid; grid-template-columns:repeat(12,1fr); gap:16px; }
+
+    /* KPI Cards */
+    .kpi-card {
+      grid-column:span 2;
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:20px;
+      position:relative; overflow:hidden;
+      transition:transform 0.2s, border-color 0.2s;
+    }
+    .kpi-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:2px;
+      background:var(--accent,var(--blue));
+    }
+    .kpi-card::after {
+      content:''; position:absolute; bottom:0; right:0;
+      width:80px; height:80px;
+      background:radial-gradient(circle, var(--accent,var(--blue)) 0%, transparent 70%);
+      opacity:0.07;
+    }
+    .kpi-card:hover { transform:translateY(-3px); border-color:var(--accent,var(--blue)); }
+    .kpi-icon { font-size:22px; margin-bottom:12px; color:var(--accent,var(--blue)); }
+    .kpi-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; font-weight:600; }
+    .kpi-value { font-size:28px; font-weight:900; letter-spacing:-1.5px; margin-top:4px; }
+    .kpi-change { font-size:12px; margin-top:6px; font-weight:500; }
+    .up { color:var(--green); } .down { color:var(--red); }
+
+    /* Panels */
+    .panel {
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:22px;
+    }
+    .panel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+    .panel-title { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+    .panel-title i { color:var(--blue); }
+    .panel-badge { font-size:11px; font-weight:600; padding:3px 9px; border-radius:20px; }
+    .badge-ai { background:rgba(139,92,246,0.15); color:var(--purple); }
+    .badge-live { background:rgba(16,185,129,0.15); color:var(--green); }
+
+    /* AI Briefing */
+    .briefing-item {
+      display:flex; gap:12px;
+      padding:12px 0;
+      border-bottom:1px solid var(--border);
+    }
+    .briefing-item:last-child { border-bottom:none; }
+    .briefing-icon { font-size:18px; flex-shrink:0; margin-top:2px; }
+    .briefing-text { font-size:13px; line-height:1.6; }
+    .briefing-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:3px; }
+
+    /* Top items list */
+    .rank-list { display:flex; flex-direction:column; gap:8px; }
+    .rank-item {
+      display:flex; align-items:center; gap:12px;
+      padding:10px 12px;
+      background:rgba(255,255,255,0.02);
+      border:1px solid var(--border);
+      border-radius:9px;
+      font-size:13px;
+    }
+    .rank-num { width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+    .rank-body { flex:1; }
+    .rank-name { font-weight:600; }
+    .rank-sub { font-size:11px; color:var(--muted); }
+    .rank-value { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; }
+
+    /* Progress bar */
+    .progress-bar { height:4px; border-radius:2px; background:rgba(255,255,255,0.06); overflow:hidden; margin-top:6px; }
+    .progress-fill { height:100%; border-radius:2px; transition:width 0.8s ease; }
+
+    /* Insight cards */
+    .insight-cards { display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto; }
+    .insight-card {
+      padding:12px 14px;
+      border-radius:10px;
+      font-size:13px;
+      border:1px solid;
+    }
+    .insight-card.critical { background:rgba(239,68,68,0.07); border-color:rgba(239,68,68,0.25); }
+    .insight-card.high { background:rgba(245,158,11,0.07); border-color:rgba(245,158,11,0.25); }
+    .insight-card.medium { background:rgba(59,130,246,0.07); border-color:rgba(59,130,246,0.2); }
+    .insight-card.low { background:rgba(16,185,129,0.07); border-color:rgba(16,185,129,0.2); }
+    .insight-type { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--cyan); margin-bottom:4px; }
+    .insight-title { font-weight:600; margin-bottom:3px; }
+    .insight-summary { font-size:12px; color:var(--sub); line-height:1.5; }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
+
+    /* Nav links */
+    .nav-links { display:flex; gap:12px; flex-wrap:wrap; }
+    .nav-link {
+      display:flex; align-items:center; gap:6px;
+      padding:7px 14px; border-radius:8px; font-size:12px; font-weight:500;
+      text-decoration:none; color:var(--sub);
+      border:1px solid var(--border);
+      background:rgba(255,255,255,0.02);
+      transition:all 0.2s;
+    }
+    .nav-link:hover { border-color:var(--blue); color:var(--blue); background:rgba(59,130,246,0.08); }
+    .nav-link.active { border-color:var(--blue); color:var(--blue); background:rgba(59,130,246,0.12); }
+
+    @media (max-width:1200px) { .kpi-card { grid-column:span 3; } }
+    @media (max-width:768px) { .ceo-grid { grid-template-columns:1fr; } .kpi-card,.panel { grid-column:span 1 !important; } }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="ceo-header">
+    <div>
+      <div class="greeting" id="greeting">Loading <span>InventraERP</span></div>
+      <div class="greeting-sub" id="greetingDate">CEO Business Intelligence Dashboard</div>
+      <div class="nav-links" style="margin-top:14px;">
+        <a href="/" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/command-center.html" class="nav-link"><i class="bi bi-lightning-fill"></i> Command Center</a>
+        <a href="/warehouse-twin.html" class="nav-link"><i class="bi bi-building"></i> Warehouse Twin</a>
+        <a href="#" class="nav-link active"><i class="bi bi-bar-chart-fill"></i> CEO Analytics</a>
+      </div>
+    </div>
+    <div>
+      <div class="period-selector">
+        <button class="period-btn" onclick="setPeriod('7d')" id="p7d">7D</button>
+        <button class="period-btn active" onclick="setPeriod('30d')" id="p30d">30D</button>
+        <button class="period-btn" onclick="setPeriod('90d')" id="p90d">90D</button>
+        <button class="period-btn" onclick="setPeriod('1y')" id="p1y">1Y</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Grid -->
+  <div class="ceo-grid">
+
+    <!-- KPI Cards -->
+    <div class="kpi-card" style="--accent:var(--green);">
+      <div class="kpi-icon"><i class="bi bi-graph-up-arrow"></i></div>
+      <div class="kpi-label">Total Revenue</div>
+      <div class="kpi-value" id="kpiRevenue">—</div>
+      <div class="kpi-change up" id="kpiRevenueChg"></div>
+    </div>
+
+    <div class="kpi-card" style="--accent:var(--blue);">
+      <div class="kpi-icon"><i class="bi bi-receipt-cutoff"></i></div>
+      <div class="kpi-label">Total Orders</div>
+      <div class="kpi-value" id="kpiOrders">—</div>
+      <div class="kpi-change" id="kpiOrdersChg"></div>
+    </div>
+
+    <div class="kpi-card" style="--accent:var(--purple);">
+      <div class="kpi-icon"><i class="bi bi-cash-coin"></i></div>
+      <div class="kpi-label">Avg Order Value</div>
+      <div class="kpi-value" id="kpiAOV">—</div>
+    </div>
+
+    <div class="kpi-card" style="--accent:var(--cyan);">
+      <div class="kpi-icon"><i class="bi bi-bank2"></i></div>
+      <div class="kpi-label">Net Cash Flow</div>
+      <div class="kpi-value" id="kpiCashFlow">—</div>
+      <div class="kpi-change" id="kpiCashFlowChg"></div>
+    </div>
+
+    <div class="kpi-card" style="--accent:var(--yellow);">
+      <div class="kpi-icon"><i class="bi bi-people-fill"></i></div>
+      <div class="kpi-label">Revenue Growth</div>
+      <div class="kpi-value" id="kpiGrowth">—</div>
+      <div class="kpi-change" id="kpiGrowthChg"></div>
+    </div>
+
+    <div class="kpi-card" style="--accent:var(--red);">
+      <div class="kpi-icon"><i class="bi bi-shield-exclamation"></i></div>
+      <div class="kpi-label">Fraud Alerts</div>
+      <div class="kpi-value" id="kpiFraud">—</div>
+      <div class="kpi-change" id="kpiFraudChg"></div>
+    </div>
+
+    <!-- Revenue Trend Chart (span 8) -->
+    <div class="panel" style="grid-column:span 8;">
+      <div class="panel-header">
+        <div class="panel-title"><i class="bi bi-bar-chart-line-fill"></i> Revenue & Profit Trend</div>
+        <span class="panel-badge badge-live">LIVE DATA</span>
+      </div>
+      <canvas id="revenueChart" style="max-height:240px;"></canvas>
+    </div>
+
+    <!-- AI Briefing (span 4) -->
+    <div class="panel" style="grid-column:span 4;">
+      <div class="panel-header">
+        <div class="panel-title"><i class="bi bi-cpu-fill"></i> AI Daily Briefing</div>
+        <span class="panel-badge badge-ai">🤖 ECOS AI</span>
+      </div>
+      <div id="briefingList">
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:30px;">Generating briefing...</div>
+      </div>
+    </div>
+
+    <!-- Top Products (span 4) -->
+    <div class="panel" style="grid-column:span 4;">
+      <div class="panel-header">
+        <div class="panel-title"><i class="bi bi-star-fill"></i> Top Products by Revenue</div>
+      </div>
+      <div class="rank-list" id="topProducts">
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Top Branches (span 4) -->
+    <div class="panel" style="grid-column:span 4;">
+      <div class="panel-header">
+        <div class="panel-title"><i class="bi bi-shop"></i> Top Branches</div>
+      </div>
+      <div class="rank-list" id="topBranches">
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Loading...</div>
+      </div>
+    </div>
+
+    <!-- Business Insights (span 4) -->
+    <div class="panel" style="grid-column:span 4;">
+      <div class="panel-header">
+        <div class="panel-title"><i class="bi bi-lightbulb-fill"></i> AI Business Insights</div>
+        <button onclick="loadData()" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:14px;"><i class="bi bi-arrow-clockwise"></i></button>
+      </div>
+      <div class="insight-cards" id="insightCards">
+        <div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Loading insights...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const API = '/api/v1';
+  const token = localStorage.getItem('token');
+  if (!token) window.location.href = '/login.html';
+
+  const apiFetch = async (url, opts = {}) => {
+    const res = await fetch(API + url, {
+      ...opts,
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+    });
+    if (res.status === 401) { window.location.href = '/login.html'; }
+    return res.json();
+  };
+
+  const fmt = (n) => {
+    if (!n && n !== 0) return '—';
+    if (n >= 10000000) return '₹' + (n/10000000).toFixed(2) + 'Cr';
+    if (n >= 100000) return '₹' + (n/100000).toFixed(1) + 'L';
+    if (n >= 1000) return '₹' + (n/1000).toFixed(1) + 'K';
+    return '₹' + Math.round(n);
+  };
+
+  const rankColors = ['rgba(59,130,246,0.25)', 'rgba(139,92,246,0.2)', 'rgba(16,185,129,0.2)', 'rgba(245,158,11,0.2)', 'rgba(239,68,68,0.2)'];
+  const rankTextColors = ['var(--blue)', 'var(--purple)', 'var(--green)', 'var(--yellow)', 'var(--red)'];
+
+  let period = '30d';
+  let revenueChart;
+
+  const setPeriod = (p) => {
+    period = p;
+    ['7d','30d','90d','1y'].forEach(x => document.getElementById('p'+x).classList.toggle('active', x === p));
+    loadData();
+  };
+
+  const loadData = async () => {
+    try {
+      const [ceoData, briefingData, insightsData] = await Promise.allSettled([
+        apiFetch(`/analytics/ceo?period=${period}`),
+        apiFetch('/analytics/briefing'),
+        apiFetch('/automation/insights?limit=6')
+      ]);
+
+      // ── CEO KPIs ──────────────────────────────────────────────────────────
+      if (ceoData.status === 'fulfilled' && ceoData.value.success) {
+        const d = ceoData.value.data;
+        const k = d.kpis;
+
+        document.getElementById('kpiRevenue').textContent = fmt(k.totalRevenue);
+        document.getElementById('kpiOrders').textContent = k.totalOrders?.toLocaleString('en-IN') || '—';
+        document.getElementById('kpiAOV').textContent = fmt(k.avgOrderValue);
+        document.getElementById('kpiCashFlow').textContent = fmt(k.netCashFlow);
+        document.getElementById('kpiFraud').textContent = k.openFraudAlerts || '0';
+
+        const growth = k.revenueGrowth;
+        const growthEl = document.getElementById('kpiGrowth');
+        const growthChgEl = document.getElementById('kpiGrowthChg');
+        growthEl.textContent = (growth >= 0 ? '+' : '') + growth + '%';
+        growthEl.style.color = growth >= 0 ? 'var(--green)' : 'var(--red)';
+        growthChgEl.textContent = growth >= 0 ? '▲ vs prev period' : '▼ vs prev period';
+        growthChgEl.className = 'kpi-change ' + (growth >= 0 ? 'up' : 'down');
+
+        document.getElementById('kpiCashFlowChg').textContent = k.cashFlowStatus === 'positive' ? '▲ Positive' : '▼ Negative';
+        document.getElementById('kpiCashFlowChg').className = 'kpi-change ' + (k.cashFlowStatus === 'positive' ? 'up' : 'down');
+
+        // Revenue trend chart
+        if (d.revenueTrend && d.revenueTrend.length > 0) {
+          const labels = d.revenueTrend.map(r => r._id);
+          const values = d.revenueTrend.map(r => r.revenue);
+          updateChart(labels, values);
+        }
+
+        // Top Products
+        const topProd = d.topProducts || [];
+        document.getElementById('topProducts').innerHTML = topProd.length
+          ? topProd.map((p, i) => `
+            <div class="rank-item">
+              <div class="rank-num" style="background:${rankColors[i]};color:${rankTextColors[i]};">${i+1}</div>
+              <div class="rank-body">
+                <div class="rank-name">${p.product || 'Product'}</div>
+                <div class="rank-sub">${p.qty?.toLocaleString() || 0} units sold</div>
+                <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,(p.revenue/topProd[0].revenue*100))}%;background:${rankTextColors[i]};"></div></div>
+              </div>
+              <div class="rank-value" style="color:${rankTextColors[i]};">${fmt(p.revenue)}</div>
+            </div>
+          `).join('')
+          : `<div style="color:var(--muted);text-align:center;padding:20px;font-size:13px;">No sales data for this period</div>`;
+
+        // Top Branches
+        const topBr = d.topBranches || [];
+        document.getElementById('topBranches').innerHTML = topBr.length
+          ? topBr.map((b, i) => `
+            <div class="rank-item">
+              <div class="rank-num" style="background:${rankColors[i]};color:${rankTextColors[i]};">${i+1}</div>
+              <div class="rank-body">
+                <div class="rank-name">${b.branch || 'Main Branch'}</div>
+                <div class="rank-sub">${b.orders} orders</div>
+              </div>
+              <div class="rank-value" style="color:${rankTextColors[i]};">${fmt(b.revenue)}</div>
+            </div>
+          `).join('')
+          : `<div style="color:var(--muted);text-align:center;padding:20px;font-size:13px;">No branch data</div>`;
+      }
+
+      // ── AI Briefing ───────────────────────────────────────────────────────
+      if (briefingData.status === 'fulfilled' && briefingData.value.success) {
+        const b = briefingData.value.data;
+        document.getElementById('greeting').innerHTML = `${b.greeting.split(',')[0]}, <span>${b.greeting.split(',')[1]?.trim() || ''}</span>`;
+        document.getElementById('greetingDate').textContent = b.date;
+
+        const items = [
+          { icon:'📈', label:'Revenue Forecast', text: b.summary?.forecast || 'Analyzing sales data...' },
+          { icon:'💵', label:'Cash Flow', text: b.summary?.cashFlow || '...' },
+          { icon:'📦', label:'Dead Stock', text: b.summary?.deadStock || '...' },
+          ...(b.summary?.urgentAlerts > 0 ? [{ icon:'⚠️', label:'Fraud Alerts', text: `${b.summary.urgentAlerts} high-priority fraud alerts require attention` }] : []),
+        ];
+
+        document.getElementById('briefingList').innerHTML = items.map(item => `
+          <div class="briefing-item">
+            <div class="briefing-icon">${item.icon}</div>
+            <div class="briefing-text">
+              <div class="briefing-label">${item.label}</div>
+              ${item.text}
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // ── AI Insights ───────────────────────────────────────────────────────
+      if (insightsData.status === 'fulfilled' && insightsData.value.success) {
+        const insights = insightsData.value.data || [];
+        document.getElementById('insightCards').innerHTML = insights.length
+          ? insights.map(ins => `
+            <div class="insight-card ${ins.impact || 'medium'}">
+              <div class="insight-type">${(ins.insightType || '').replace(/_/g,' ')}</div>
+              <div class="insight-title">${ins.title}</div>
+              <div class="insight-summary">${ins.summary || ''}</div>
+            </div>
+          `).join('')
+          : `<div style="color:var(--muted);text-align:center;padding:20px;font-size:13px;"><i class="bi bi-cpu" style="font-size:28px;display:block;margin-bottom:8px;opacity:0.3;"></i>Generating AI insights...</div>`;
+      }
+
+    } catch (err) {
+      console.error('CEO dashboard error:', err);
+    }
+  };
+
+  // ── Revenue Chart ──────────────────────────────────────────────────────────
+  const initChart = () => {
+    const labels = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(); d.setDate(d.getDate() - i);
+      labels.push(d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
+    }
+
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    revenueChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: labels.map(() => 0),
+            backgroundColor: 'rgba(16,185,129,0.25)',
+            borderColor: 'rgba(16,185,129,0.8)',
+            borderWidth: 1.5,
+            borderRadius: 4,
+            borderSkipped: false
+          },
+          {
+            label: 'Trend',
+            data: labels.map(() => 0),
+            type: 'line',
+            borderColor: '#3b82f6',
+            borderWidth: 2.5,
+            tension: 0.4,
+            fill: false,
+            pointBackgroundColor: '#3b82f6',
+            pointRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 11 } } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', callback: v => fmt(v) } }
+        }
+      }
+    });
+  };
+
+  const updateChart = (labels, values) => {
+    if (revenueChart) {
+      revenueChart.data.labels = labels;
+      revenueChart.data.datasets[0].data = values;
+      revenueChart.data.datasets[1].data = values;
+      revenueChart.update();
+    }
+  };
+
+  // ── Boot ───────────────────────────────────────────────────────────────────
+  initChart();
+  loadData();
+  setInterval(loadData, 60000); // refresh every minute
+</script>
+</body>
+</html>

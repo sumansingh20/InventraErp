@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # MongoDB Database Service
+  inventra-db:
+    image: mongo:6.0
+    container_name: inventra-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: inventra_erp
+    volumes:
+      - mongodb_data:/data/db
+
+  # Redis Service for Session & Bull Queues
+  inventra-redis:
+    image: redis:7-alpine
+    container_name: inventra-redis
+    restart: always
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Node.js API Service
+  inventra-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: inventra-api-server
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGO_URI=mongodb://inventra-db:27017/inventra_erp
+      - REDIS_URL=redis://inventra-redis:6379
+      - JWT_SECRET=df0516b2cfd84e8a8b13c7a00f162db8ea5fa879571ff2be201a4ad848e3e4a9
+      - JWT_EXPIRE=24h
+      - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://localhost:5000
+    depends_on:
+      - inventra-db
+      - inventra-redis
+    volumes:
+      - backend_uploads:/app/uploads
+
+volumes:
+  mongodb_data:
+  redis_data:
+  backend_uploads:

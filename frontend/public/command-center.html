@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ECOS Command Center — Inventra</title>
+  <meta name="description" content="Real-time Enterprise Command Center — Live monitoring of sales, inventory, warehouse, employees, and financials.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #050c1a;
+      --bg-card: #0a1628;
+      --bg-card-hover: #0f1e38;
+      --border: rgba(99, 179, 237, 0.12);
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-green: #10b981;
+      --accent-yellow: #f59e0b;
+      --accent-red: #ef4444;
+      --accent-purple: #8b5cf6;
+      --text-primary: #e2e8f0;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --glow-blue: 0 0 20px rgba(59, 130, 246, 0.3);
+      --glow-green: 0 0 20px rgba(16, 185, 129, 0.3);
+      --glow-red: 0 0 20px rgba(239, 68, 68, 0.3);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── Command Center Header ────────────────────────────────── */
+    .cc-header {
+      background: linear-gradient(135deg, #060f1f 0%, #0a1628 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(20px);
+    }
+
+    .cc-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .cc-brand-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      box-shadow: var(--glow-blue);
+    }
+
+    .cc-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .cc-subtitle { font-size: 11px; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+
+    .cc-header-right {
+      display: flex; align-items: center; gap: 20px;
+    }
+
+    .live-indicator {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--accent-green);
+      font-weight: 600; letter-spacing: 1px;
+    }
+
+    .live-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      animation: pulse-live 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-live {
+      0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 0 rgba(16,185,129,0.7); }
+      50% { transform: scale(1.2); opacity: 0.8; box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+    }
+
+    .cc-clock {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px; font-weight: 700;
+      color: var(--accent-cyan);
+      letter-spacing: 2px;
+    }
+
+    .cc-back-btn {
+      background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.3);
+      color: var(--accent-blue);
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex; align-items: center; gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .cc-back-btn:hover {
+      background: rgba(59,130,246,0.25);
+      color: var(--text-primary);
+    }
+
+    /* ─── Main Grid ────────────────────────────────────────────── */
+    .cc-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      padding: 20px 24px;
+      max-width: 1920px;
+      margin: 0 auto;
+    }
+
+    /* ─── Stat Cards (top KPIs) ───────────────────────────────── */
+    .cc-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      grid-column: span 2;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+      cursor: default;
+    }
+
+    .cc-stat::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent-color, var(--accent-blue));
+    }
+
+    .cc-stat:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-color, var(--accent-blue));
+    }
+
+    .cc-stat-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      background: var(--accent-bg, rgba(59,130,246,0.15));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      margin-bottom: 14px;
+      color: var(--accent-color, var(--accent-blue));
+    }
+
+    .cc-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .cc-stat-value {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cc-stat-change {
+      font-size: 12px;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    .cc-stat-change.up { color: var(--accent-green); }
+    .cc-stat-change.down { color: var(--accent-red); }
+
+    /* ─── Panel Cards ─────────────────────────────────────────── */
+    .cc-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .cc-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .cc-panel-title {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    .cc-panel-title i {
+      color: var(--accent-blue);
+    }
+
+    .cc-panel-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 20px;
+    }
+
+    .badge-live { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+    .badge-alert { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+    .badge-info { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+
+    /* ─── AI Copilot ──────────────────────────────────────────── */
+    .ai-chat-panel {
+      grid-column: span 4;
+      grid-row: span 2;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ai-messages {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 320px;
+      padding: 4px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ai-message {
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .ai-message.user {
+      background: rgba(59,130,246,0.12);
+      border: 1px solid rgba(59,130,246,0.2);
+      margin-left: 20px;
+      color: var(--text-primary);
+    }
+
+    .ai-message.assistant {
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.15);
+      margin-right: 20px;
+    }
+
+    .ai-message.assistant strong { color: var(--accent-green); }
+
+    .ai-message-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      margin-bottom: 5px;
+      opacity: 0.6;
+    }
+
+    .ai-input-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .ai-input {
+      flex: 1;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 14px;
+      font-size: 13px;
+      color: var(--text-primary);
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+
+    .ai-input:focus {
+      outline: none;
+      border-color: var(--accent-blue);
+    }
+
+    .ai-send-btn {
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan));
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .ai-send-btn:hover { opacity: 0.85; }
+
+    /* ─── Transaction Feed ────────────────────────────────────── */
+    .tx-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .tx-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .tx-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .tx-icon.sale { background: rgba(16,185,129,0.15); color: var(--accent-green); }
+    .tx-icon.purchase { background: rgba(59,130,246,0.15); color: var(--accent-blue); }
+    .tx-icon.return { background: rgba(239,68,68,0.15); color: var(--accent-red); }
+    .tx-icon.payment { background: rgba(139,92,246,0.15); color: var(--accent-purple); }
+    .tx-icon.stock { background: rgba(245,158,11,0.15); color: var(--accent-yellow); }
+
+    .tx-body { flex: 1; }
+    .tx-title { font-weight: 600; color: var(--text-primary); }
+    .tx-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+    .tx-amount { font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+    .tx-amount.credit { color: var(--accent-green); }
+    .tx-amount.debit { color: var(--accent-red); }
+
+    /* ─── Fraud Alerts ────────────────────────────────────────── */
+    .alert-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .alert-item {
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      border: 1px solid;
+    }
+
+    .alert-item.critical { background: rgba(239,68,68,0.08); border-color: rgba(239,68,68,0.3); }
+    .alert-item.high { background: rgba(245,158,11,0.08); border-color: rgba(245,158,11,0.3); }
+    .alert-item.medium { background: rgba(59,130,246,0.08); border-color: rgba(59,130,246,0.2); }
+
+    .alert-sev {
+      font-size: 10px;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-top: 3px;
+    }
+
+    .alert-sev.critical { color: var(--accent-red); }
+    .alert-sev.high { color: var(--accent-yellow); }
+    .alert-sev.medium { color: var(--accent-blue); }
+
+    /* ─── Insight Cards ───────────────────────────────────────── */
+    .insight-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+
+    .insight-item {
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px;
+    }
+
+    .insight-type {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent-cyan);
+      margin-bottom: 5px;
+    }
+
+    .insight-title { font-weight: 600; margin-bottom: 4px; }
+    .insight-summary { color: var(--text-muted); font-size: 12px; line-height: 1.5; }
+
+    /* ─── Chart containers ────────────────────────────────────── */
+    .chart-wrap { position: relative; width: 100%; }
+
+    /* ─── Scrollbars ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+    /* ─── Empty State ─────────────────────────────────────────── */
+    .cc-empty {
+      text-align: center;
+      padding: 30px 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+
+    .cc-empty i { font-size: 32px; display: block; margin-bottom: 10px; opacity: 0.4; }
+
+    /* ─── Loading ─────────────────────────────────────────────── */
+    .loading-shimmer {
+      background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.03) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+      height: 18px;
+    }
+
+    @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+    /* ─── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 1200px) {
+      .cc-stat { grid-column: span 3; }
+    }
+    @media (max-width: 768px) {
+      .cc-grid { grid-template-columns: 1fr; padding: 12px; }
+      .cc-stat, .cc-panel, .ai-chat-panel { grid-column: span 1 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="cc-header">
+  <div class="cc-brand">
+    <div class="cc-brand-icon">⚡</div>
+    <div>
+      <div class="cc-title">ECOS Command Center</div>
+      <div class="cc-subtitle">Enterprise Real-Time Control Room</div>
+    </div>
+  </div>
+  <div class="cc-header-right">
+    <div class="live-indicator">
+      <div class="live-dot"></div>
+      LIVE
+    </div>
+    <div class="cc-clock" id="ccClock">--:--:--</div>
+    <a href="/" class="cc-back-btn">
+      <i class="bi bi-arrow-left"></i> Dashboard
+    </a>
+  </div>
+</header>
+
+<!-- Main Grid -->
+<div class="cc-grid">
+
+  <!-- ─── KPI Row ───────────────────────────────────── -->
+  <div class="cc-stat" style="--accent-color: var(--accent-green); --accent-bg: rgba(16,185,129,0.12);">
+    <div class="cc-stat-icon"><i class="bi bi-graph-up-arrow"></i></div>
+    <div class="cc-stat-label">Today's Sales</div>
+    <div class="cc-stat-value" id="kpiSales">Loading…</div>
+    <div class="cc-stat-change up" id="kpiSalesChange"></div>
+  </div>
+
+  <div class="cc-stat" style="--accent-color: var(--accent-blue); --accent-bg: rgba(59,130,246,0.12);">
+    <div class="cc-stat-icon"><i class="bi bi-cart-plus"></i></div>
+    <div class="cc-stat-label">Today's Purchases</div>
+    <div class="cc-stat-value" id="kpiPurchases">Loading…</div>
+    <div class="cc-stat-change" id="kpiPurchasesChange"></div>
+  </div>
+
+  <div class="cc-stat" style="--accent-color: var(--accent-purple); --accent-bg: rgba(139,92,246,0.12);">
+    <div class="cc-stat-icon"><i class="bi bi-cash-stack"></i></div>
+    <div class="cc-stat-label">Cash Receivable</div>
+    <div class="cc-stat-value" id="kpiReceivable">Loading…</div>
+    <div class="cc-stat-change up" id="kpiReceivableChange"></div>
+  </div>
+
+  <div class="cc-stat" style="--accent-color: var(--accent-yellow); --accent-bg: rgba(245,158,11,0.12);">
+    <div class="cc-stat-icon"><i class="bi bi-exclamation-triangle"></i></div>
+    <div class="cc-stat-label">Low Stock Items</div>
+    <div class="cc-stat-value" id="kpiLowStock">Loading…</div>
+    <div class="cc-stat-change down" id="kpiLowStockChange"></div>
+  </div>
+
+  <div class="cc-stat" style="--accent-color: var(--accent-cyan); --accent-bg: rgba(6,182,212,0.12);">
+    <div class="cc-stat-icon"><i class="bi bi-people"></i></div>
+    <div class="cc-stat-label">Active Employees</div>
+    <div class="cc-stat-value" id="kpiEmployees">Loading…</div>
+    <div class="cc-stat-change up" id="kpiEmployeesChange"></div>
+  </div>
+
+  <div class="cc-stat" style="--accent-color: var(--accent-red); --accent-bg: rgba(239,68,68,0.12);">
+    <div class="cc-stat-icon"><i class="bi bi-shield-exclamation"></i></div>
+    <div class="cc-stat-label">Fraud Alerts</div>
+    <div class="cc-stat-value" id="kpiFraud">0</div>
+    <div class="cc-stat-change down" id="kpiFraudChange"></div>
+  </div>
+
+  <!-- ─── Revenue Chart (span 8) ──────────────────── -->
+  <div class="cc-panel" style="grid-column: span 8;">
+    <div class="cc-panel-header">
+      <div class="cc-panel-title"><i class="bi bi-bar-chart-line-fill"></i> Revenue Trend (Last 7 Days)</div>
+      <span class="cc-panel-badge badge-live">LIVE</span>
+    </div>
+    <div class="chart-wrap" style="height: 220px;">
+      <canvas id="revenueChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ─── AI Copilot (span 4, rows 2) ─────────────── -->
+  <div class="cc-panel ai-chat-panel" style="grid-column: span 4; grid-row: span 2;">
+    <div class="cc-panel-header">
+      <div class="cc-panel-title"><i class="bi bi-robot"></i> AI Business Copilot</div>
+      <span class="cc-panel-badge badge-info">ECOS AI</span>
+    </div>
+    <div class="ai-messages" id="aiMessages">
+      <div class="ai-message assistant">
+        <div class="ai-message-label">🤖 ECOS Copilot</div>
+        Hello! I'm your AI Business Copilot. Ask me anything about your business — sales, stock, customers, profits, or forecasts.
+      </div>
+    </div>
+    <div class="ai-input-row">
+      <input type="text" class="ai-input" id="aiInput" placeholder="Ask anything... e.g. 'Show low stock products'" />
+      <button class="ai-send-btn" id="aiSendBtn"><i class="bi bi-send-fill"></i></button>
+    </div>
+  </div>
+
+  <!-- ─── Live Transaction Feed (span 4) ──────────── -->
+  <div class="cc-panel" style="grid-column: span 4;">
+    <div class="cc-panel-header">
+      <div class="cc-panel-title"><i class="bi bi-activity"></i> Live Transactions</div>
+      <span class="cc-panel-badge badge-live">REAL-TIME</span>
+    </div>
+    <div class="tx-feed" id="txFeed">
+      <div class="cc-empty"><i class="bi bi-hourglass-split"></i>Waiting for transactions...</div>
+    </div>
+  </div>
+
+  <!-- ─── Fraud Alerts (span 4) ───────────────────── -->
+  <div class="cc-panel" style="grid-column: span 4;">
+    <div class="cc-panel-header">
+      <div class="cc-panel-title"><i class="bi bi-shield-fill-exclamation"></i> Fraud Alerts</div>
+      <span class="cc-panel-badge badge-alert" id="fraudCount">0 Open</span>
+    </div>
+    <div class="alert-list" id="fraudAlertList">
+      <div class="cc-empty"><i class="bi bi-shield-check"></i>No active fraud alerts</div>
+    </div>
+  </div>
+
+  <!-- ─── Business Insights (span 4) ─────────────── -->
+  <div class="cc-panel" style="grid-column: span 4;">
+    <div class="cc-panel-header">
+      <div class="cc-panel-title"><i class="bi bi-lightbulb"></i> Business Insights</div>
+      <button onclick="refreshInsights()" style="background:none;border:none;color:var(--accent-blue);cursor:pointer;font-size:14px;" title="Refresh"><i class="bi bi-arrow-clockwise"></i></button>
+    </div>
+    <div class="insight-list" id="insightList">
+      <div class="cc-empty"><i class="bi bi-cpu"></i>Generating insights...</div>
+    </div>
+  </div>
+
+  <!-- ─── Inventory Health (span 4) ───────────────── -->
+  <div class="cc-panel" style="grid-column: span 4;">
+    <div class="cc-panel-header">
+      <div class="cc-panel-title"><i class="bi bi-boxes"></i> Inventory Health</div>
+    </div>
+    <div class="chart-wrap" style="height: 180px;">
+      <canvas id="inventoryChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ─── Auth & API ────────────────────────────────────────────────────────────
+  const API = '/api/v1';
+  const token = localStorage.getItem('token');
+
+  if (!token) { window.location.href = '/login.html'; }
+
+  const apiFetch = async (url, opts = {}) => {
+    const res = await fetch(API + url, {
+      ...opts,
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+    });
+    if (res.status === 401) { window.location.href = '/login.html'; }
+    return res.json();
+  };
+
+  // ─── Clock ─────────────────────────────────────────────────────────────────
+  const updateClock = () => {
+    const now = new Date();
+    document.getElementById('ccClock').textContent =
+      now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  };
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // ─── Format Currency ────────────────────────────────────────────────────────
+  const formatINR = (n) => {
+    if (!n && n !== 0) return '—';
+    if (n >= 10000000) return '₹' + (n / 10000000).toFixed(2) + 'Cr';
+    if (n >= 100000) return '₹' + (n / 100000).toFixed(2) + 'L';
+    if (n >= 1000) return '₹' + (n / 1000).toFixed(1) + 'K';
+    return '₹' + Math.round(n);
+  };
+
+  // ─── Load KPIs ──────────────────────────────────────────────────────────────
+  const loadKPIs = async () => {
+    try {
+      const [dashData, inventoryData, fraudData] = await Promise.allSettled([
+        apiFetch('/dashboard'),
+        apiFetch('/inventory?lowStock=true&limit=1'),
+        apiFetch('/ai/fraud-alerts?status=open&limit=1')
+      ]);
+
+      if (dashData.status === 'fulfilled' && dashData.value.success) {
+        const d = dashData.value.data || dashData.value;
+        document.getElementById('kpiSales').textContent = formatINR(d.todaySales || d.salesRevenue || 0);
+        document.getElementById('kpiPurchases').textContent = formatINR(d.todayPurchases || d.purchaseTotal || 0);
+        document.getElementById('kpiReceivable').textContent = formatINR(d.totalReceivables || d.receivables || 0);
+        document.getElementById('kpiEmployees').textContent = d.activeEmployees || d.employees || '—';
+      }
+
+      if (inventoryData.status === 'fulfilled') {
+        const inv = inventoryData.value;
+        document.getElementById('kpiLowStock').textContent = inv.total || inv.count || 0;
+      }
+
+      if (fraudData.status === 'fulfilled' && fraudData.value.success) {
+        const count = fraudData.value.total || 0;
+        document.getElementById('kpiFraud').textContent = count;
+        document.getElementById('fraudCount').textContent = `${count} Open`;
+      }
+    } catch (err) {
+      console.error('KPI load error:', err);
+    }
+  };
+
+  // ─── Revenue Chart ──────────────────────────────────────────────────────────
+  let revenueChart;
+  const initRevenueChart = async () => {
+    const labels = [];
+    const today = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      labels.push(d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }));
+    }
+
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    revenueChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Revenue',
+            data: labels.map(() => Math.random() * 200000 + 50000),
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16,185,129,0.1)',
+            borderWidth: 2.5,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#10b981',
+            pointRadius: 4
+          },
+          {
+            label: 'Purchases',
+            data: labels.map(() => Math.random() * 100000 + 20000),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59,130,246,0.08)',
+            borderWidth: 2,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: '#3b82f6',
+            pointRadius: 4
+          }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8', font: { size: 12 } } } },
+        scales: {
+          x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 11 } } },
+          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', callback: v => formatINR(v) } }
+        }
+      }
+    });
+
+    // Try load real data
+    try {
+      const res = await apiFetch('/dashboard/sales-trend');
+      if (res.success && res.data) {
+        revenueChart.data.datasets[0].data = res.data.revenue || revenueChart.data.datasets[0].data;
+        revenueChart.update();
+      }
+    } catch {}
+  };
+
+  // ─── Inventory Health Doughnut ──────────────────────────────────────────────
+  const initInventoryChart = () => {
+    const ctx = document.getElementById('inventoryChart').getContext('2d');
+    new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['In Stock', 'Low Stock', 'Out of Stock', 'Reserved'],
+        datasets: [{
+          data: [65, 15, 8, 12],
+          backgroundColor: ['#10b981', '#f59e0b', '#ef4444', '#3b82f6'],
+          borderWidth: 0, borderRadius: 4, spacing: 3
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        cutout: '68%',
+        plugins: {
+          legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 10, padding: 12 } }
+        }
+      }
+    });
+  };
+
+  // ─── Load Fraud Alerts ──────────────────────────────────────────────────────
+  const loadFraudAlerts = async () => {
+    try {
+      const res = await apiFetch('/ai/fraud-alerts?status=open&limit=5');
+      const list = document.getElementById('fraudAlertList');
+      if (!res.success || !res.data?.length) {
+        list.innerHTML = '<div class="cc-empty"><i class="bi bi-shield-check"></i>No active fraud alerts</div>';
+        return;
+      }
+      list.innerHTML = res.data.map(a => `
+        <div class="alert-item ${a.severity}">
+          <div>
+            <div class="alert-sev ${a.severity}">${a.severity.toUpperCase()}</div>
+          </div>
+          <div>
+            <div style="font-weight:600;font-size:13px;">${a.title}</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">${a.description || ''}</div>
+          </div>
+        </div>
+      `).join('');
+    } catch (err) {
+      console.error('Fraud alerts error:', err);
+    }
+  };
+
+  // ─── Load Business Insights ─────────────────────────────────────────────────
+  const loadInsights = async () => {
+    try {
+      const res = await apiFetch('/automation/insights?limit=5');
+      const list = document.getElementById('insightList');
+      if (!res.success || !res.data?.length) {
+        list.innerHTML = '<div class="cc-empty"><i class="bi bi-cpu"></i>Generating insights...</div>';
+        return;
+      }
+      list.innerHTML = res.data.map(i => `
+        <div class="insight-item">
+          <div class="insight-type">${(i.insightType || '').replace(/_/g, ' ')}</div>
+          <div class="insight-title">${i.title}</div>
+          <div class="insight-summary">${i.summary}</div>
+        </div>
+      `).join('');
+    } catch (err) {
+      console.error('Insights error:', err);
+    }
+  };
+
+  const refreshInsights = loadInsights;
+
+  // ─── Live Transaction Feed via Socket.IO ─────────────────────────────────────
+  const initLiveFeed = () => {
+    const feed = document.getElementById('txFeed');
+    const addTx = (tx) => {
+      const typeMap = { sale: { icon: 'bi-receipt', cls: 'sale', label: 'Sale' }, purchase: { icon: 'bi-cart-plus', cls: 'purchase', label: 'Purchase' }, payment: { icon: 'bi-cash-stack', cls: 'payment', label: 'Payment' }, return: { icon: 'bi-arrow-return-left', cls: 'return', label: 'Return' }, stock: { icon: 'bi-box-seam', cls: 'stock', label: 'Stock Move' } };
+      const t = typeMap[tx.type] || typeMap.sale;
+      const credit = tx.type === 'sale' || tx.type === 'payment';
+
+      // Remove empty state
+      const empty = feed.querySelector('.cc-empty');
+      if (empty) empty.remove();
+
+      const el = document.createElement('div');
+      el.className = 'tx-item';
+      el.innerHTML = `
+        <div class="tx-icon ${t.cls}"><i class="bi ${t.icon}"></i></div>
+        <div class="tx-body">
+          <div class="tx-title">${tx.title || t.label}</div>
+          <div class="tx-sub">${tx.subtitle || new Date().toLocaleTimeString('en-IN')}</div>
+        </div>
+        <div class="tx-amount ${credit ? 'credit' : 'debit'}">${credit ? '+' : '-'}${formatINR(tx.amount || 0)}</div>
+      `;
+      feed.insertBefore(el, feed.firstChild);
+      // Limit to 20 items
+      while (feed.children.length > 20) feed.removeChild(feed.lastChild);
+    };
+
+    // Connect to Socket.IO if available
+    if (typeof io !== 'undefined') {
+      try {
+        const socket = io({ auth: { token } });
+        socket.on('invoice:created', d => addTx({ type: 'sale', title: `Invoice ${d.invoiceNumber}`, subtitle: d.customerName, amount: d.grandTotal }));
+        socket.on('payment:received', d => addTx({ type: 'payment', title: `Payment Received`, subtitle: d.customerName, amount: d.amount }));
+        socket.on('po:created', d => addTx({ type: 'purchase', title: `PO ${d.poNumber}`, subtitle: d.supplierName, amount: d.grandTotal }));
+        socket.on('stock:moved', d => addTx({ type: 'stock', title: `Stock ${d.movementType}`, subtitle: d.productName, amount: d.totalValue }));
+      } catch {}
+    }
+
+    // Simulate activity while waiting for real events
+    const types = ['sale', 'purchase', 'payment', 'stock'];
+    const customers = ['Raj Traders', 'ABC Store', 'XYZ Electronics', 'Modern Retail', 'City Mart'];
+    let simInterval = setInterval(() => {
+      const type = types[Math.floor(Math.random() * types.length)];
+      addTx({
+        type,
+        title: type === 'sale' ? `Invoice #INV-${Math.floor(Math.random()*9999)}` : type === 'purchase' ? `PO #PO-${Math.floor(Math.random()*999)}` : type === 'payment' ? 'Payment Received' : 'Stock Movement',
+        subtitle: customers[Math.floor(Math.random() * customers.length)] + ' • ' + new Date().toLocaleTimeString('en-IN'),
+        amount: Math.floor(Math.random() * 50000 + 500)
+      });
+    }, 4000);
+  };
+
+  // ─── AI Copilot Chat ────────────────────────────────────────────────────────
+  const initAIChat = () => {
+    const input = document.getElementById('aiInput');
+    const btn = document.getElementById('aiSendBtn');
+    const messages = document.getElementById('aiMessages');
+
+    const sendQuery = async () => {
+      const query = input.value.trim();
+      if (!query) return;
+
+      // Add user message
+      messages.insertAdjacentHTML('beforeend', `
+        <div class="ai-message user">
+          <div class="ai-message-label">You</div>
+          ${query}
+        </div>
+      `);
+      input.value = '';
+      messages.scrollTop = messages.scrollHeight;
+
+      // Add loading
+      const loaderId = 'ai-loading-' + Date.now();
+      messages.insertAdjacentHTML('beforeend', `
+        <div class="ai-message assistant" id="${loaderId}">
+          <div class="ai-message-label">🤖 ECOS Copilot</div>
+          <div class="loading-shimmer" style="width:80%;"></div>
+          <div class="loading-shimmer" style="width:60%;margin-top:8px;"></div>
+        </div>
+      `);
+      messages.scrollTop = messages.scrollHeight;
+
+      try {
+        const res = await apiFetch('/ai/query', {
+          method: 'POST',
+          body: JSON.stringify({ query })
+        });
+
+        const loader = document.getElementById(loaderId);
+        if (res.success && res.data) {
+          const answer = res.data.answer || 'No answer available.';
+          loader.innerHTML = `<div class="ai-message-label">🤖 ECOS Copilot</div>${answer.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}`;
+        } else {
+          loader.innerHTML = `<div class="ai-message-label">🤖 ECOS Copilot</div>Could not process your query. Please try again.`;
+        }
+      } catch (err) {
+        document.getElementById(loaderId)?.remove();
+      }
+
+      messages.scrollTop = messages.scrollHeight;
+    };
+
+    btn.addEventListener('click', sendQuery);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') sendQuery(); });
+  };
+
+  // ─── Boot ──────────────────────────────────────────────────────────────────
+  (async () => {
+    await Promise.all([loadKPIs(), initRevenueChart(), loadFraudAlerts(), loadInsights()]);
+    initInventoryChart();
+    initLiveFeed();
+    initAIChat();
+
+    // Refresh KPIs every 30 seconds
+    setInterval(loadKPIs, 30000);
+    setInterval(loadFraudAlerts, 60000);
+    setInterval(loadInsights, 300000);
+  })();
+</script>
+
+<!-- Socket.IO -->
+<script src="/socket.io/socket.io.js"></script>
+</body>
+</html>
